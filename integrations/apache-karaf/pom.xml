@@ -52,6 +52,7 @@
     <module>karaf-demo-server</module>
     -->
     <module>karaf-features</module>
+    <module>karaf-distribution</module>
     <module>karaf-itests</module>
   </modules>
 

@@ -19,12 +19,16 @@
 -->
 <features xmlns="http://karaf.apache.org/ qxmlns/features/v1.5.0" name="karaf-plc4x-features">
 
+  <feature name="plc4x-api" dependency="PLC4X API and SPI" version="${project.version}">
+    <bundle>mvn:org.apache.plc4x/plc4j-api/0.4.0-SNAPSHOT</bundle>
+  </feature>
+
   <feature name="plc4x-ads-driver" description="Integrations: Apache Karaf: ADS" version="${project.version}">
     <details>Integration module for integrating PLC4X into Apache Karaf.</details>
     <feature prerequisite="true">wrap</feature>
+    <feature>plc4x-api</feature>
 
     <bundle>mvn:org.apache.plc4x/plc4j-driver-ads/0.4.0-SNAPSHOT</bundle>
-    <bundle>mvn:org.apache.plc4x/plc4j-api/0.4.0-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.plc4x/plc4j-protocol-ads/0.4.0-SNAPSHOT</bundle>
     <bundle>mvn:io.netty/netty-codec/4.1.35.Final</bundle>
     <bundle>wrap:mvn:com.github.snksoft/crc/1.0.1</bundle>
@@ -46,9 +50,9 @@
   <feature name="plc4x-ethernet-ip-driver" description="Integrations: Apache Karaf: EtherNet/IP" version="${project.version}">
     <details>Integration module for integrating PLC4X into Apache Karaf.</details>
     <feature prerequisite="true">wrap</feature>
+    <feature>plc4x-api</feature>
 
     <bundle>mvn:org.apache.plc4x/plc4j-driver-ethernet-ip/0.4.0-SNAPSHOT</bundle>
-    <bundle>mvn:org.apache.plc4x/plc4j-api/0.4.0-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.plc4x/plc4j-protocol-ethernet-ip/0.4.0-SNAPSHOT</bundle>
     <bundle>wrap:mvn:com.digitalpetri.enip/enip-core/1.2.0</bundle>
     <bundle>mvn:io.netty/netty-codec/4.1.35.Final</bundle>
@@ -66,8 +70,9 @@
   <feature name="plc4x-modbus-driver" description="Integrations: Apache Karaf: Modbus" version="${project.version}">
     <details>Integration module for integrating PLC4X into Apache Karaf.</details>
     <feature prerequisite="true" dependency="false">wrap</feature>
+    <feature>plc4x-api</feature>
+
     <bundle>mvn:org.apache.plc4x/plc4j-driver-modbus/0.4.0-SNAPSHOT</bundle>
-    <bundle>mvn:org.apache.plc4x/plc4j-api/0.4.0-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.plc4x/plc4j-protocol-modbus/0.4.0-SNAPSHOT</bundle>
     <bundle>wrap:mvn:com.digitalpetri.modbus/modbus-core/1.1.0</bundle>
     <bundle>mvn:io.netty/netty-codec/4.1.35.Final</bundle>
@@ -87,8 +92,9 @@
 
   <feature name="plc4x-s7-driver" description="Integrations: Apache Karaf: S7" version="${project.version}">
     <details>Integration module for integrating PLC4X into Apache Karaf.</details>
+    <feature>plc4x-api</feature>
+
     <bundle>mvn:org.apache.plc4x/plc4j-driver-s7/0.4.0-SNAPSHOT</bundle>
-    <bundle>mvn:org.apache.plc4x/plc4j-api/0.4.0-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.plc4x/plc4j-protocol-iso-on-tcp/0.4.0-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.plc4x/plc4j-protocol-iso-tp/0.4.0-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.plc4x/plc4j-protocol-s7/0.4.0-SNAPSHOT</bundle>
@@ -107,9 +113,9 @@
 
   <feature name="plc4x-simulated-driver" description="Integrations: Apache Karaf: Simulated" version="${project.version}">
     <details>Integration module for integrating PLC4X into Apache Karaf.</details>
+    <feature>plc4x-api</feature>
 
     <bundle>mvn:org.apache.plc4x/plc4j-driver-simulated/0.4.0-SNAPSHOT</bundle>
-    <bundle>mvn:org.apache.plc4x/plc4j-api/0.4.0-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.plc4x/plc4j-protocol-driver-base/0.4.0-SNAPSHOT</bundle>
     <bundle>mvn:io.netty/netty-buffer/4.1.35.Final</bundle>
     <bundle>mvn:io.netty/netty-codec/4.1.35.Final</bundle>

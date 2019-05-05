@@ -38,10 +38,29 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.plc4x</groupId>
-      <artifactId>karaf-features</artifactId>
+      <artifactId>plc4j-driver-ads</artifactId>
       <version>0.4.0-SNAPSHOT</version>
-      <classifier>features</classifier>
-      <type>xml</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.plc4x</groupId>
+      <artifactId>plc4j-driver-ethernet-ip</artifactId>
+      <version>0.4.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.plc4x</groupId>
+      <artifactId>plc4j-driver-simulated</artifactId>
+      <version>0.4.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.plc4x</groupId>
+      <artifactId>plc4j-driver-s7</artifactId>
+      <version>0.4.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.plc4x</groupId>
+      <artifactId>karaf-distribution</artifactId>
+      <version>0.4.0-SNAPSHOT</version>
+      <type>tar.gz</type>
     </dependency>
 
     <dependency>
