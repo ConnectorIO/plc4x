@@ -18,6 +18,7 @@ under the License.
 */
 package org.apache.plc4x.karaf.itests;
 
+import org.apache.plc4x.java.DriverManager;
 import org.apache.plc4x.java.PlcDriverManager;
 import org.apache.plc4x.java.api.PlcConnection;
 import org.junit.Test;
@@ -29,11 +30,16 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.Constants;
 
+import javax.inject.Inject;
+
 import static junit.framework.TestCase.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
 public class SimulatedIntegrationTest extends FeaturesIntegrationTest {
+
+    @Inject
+    DriverManager manager;
 
     @Test
     public void testInstallSimulatedFeature() throws Exception {
@@ -41,11 +47,8 @@ public class SimulatedIntegrationTest extends FeaturesIntegrationTest {
 
         assertFeatureInstalled("plc4x-simulated-driver");
 
-        PlcDriverManager manager = new PlcDriverManager();
-
-        // this statement currently fails
-        //PlcConnection connection = manager.getConnection("test:foo");
-        //assertNotNull(connection);
+        PlcConnection connection = manager.getConnection("test:foo");
+        assertNotNull(connection);
     }
 
 }
