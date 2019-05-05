@@ -37,6 +37,8 @@ import java.util.EnumSet;
 
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.maven;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.debugConfiguration;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 
 /**
@@ -67,7 +69,7 @@ public abstract class FeaturesIntegrationTest {
         String karafVersion = MavenUtils.getArtifactVersion("org.apache.karaf", "apache-karaf");
         MavenArtifactUrlReference frameworkURL = maven("org.apache.plc4x", "karaf-distribution").type("tar.gz").versionAsInProject();
 
-        return new Option[]{
+        return new Option[] {
             karafDistributionConfiguration().karafVersion(karafVersion).frameworkUrl(frameworkURL)
         };
     }

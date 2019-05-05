@@ -23,6 +23,7 @@ import org.apache.plc4x.java.PlcDriverManager;
 import org.apache.plc4x.java.api.PlcConnection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -33,6 +34,9 @@ import org.osgi.framework.Constants;
 import javax.inject.Inject;
 
 import static junit.framework.TestCase.assertNotNull;
+import static org.ops4j.pax.exam.CoreOptions.composite;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFileExtend;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
@@ -43,12 +47,24 @@ public class SimulatedIntegrationTest extends FeaturesIntegrationTest {
 
     @Test
     public void testInstallSimulatedFeature() throws Exception {
-        features.installFeature("plc4x-simulated-driver", INSTALL_OPTIONS);
-
         assertFeatureInstalled("plc4x-simulated-driver");
 
         PlcConnection connection = manager.getConnection("test:foo");
         assertNotNull(connection);
     }
 
+    /**
+     * This is further customization of test execution environemnt.
+     *
+     * Because test operation #testInstallSimulatedFeature is wrapped in OSGi bundle it requires plc4x-simulated-driver
+     * before test execution starts in order to resolve dependencies and let driver be found.
+     *
+     * @return Updated configuration which boots Karaf with plc4x-simulated-driver for tests.
+     */
+    @Override
+    public Option[] config() {
+        return composite(
+            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", "plc4x-simulated-driver")
+        ).add(super.config()).getOptions();
+    }
 }
