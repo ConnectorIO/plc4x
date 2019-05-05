@@ -35,18 +35,24 @@
   <description>Integration module for integrating PLC4X into Apache Karaf.</description>
 
   <properties>
-    <karaf.version>4.2.2</karaf.version>
+    <karaf.version>4.2.5</karaf.version>
     <karaf-maven-plugin.version>${karaf.version}</karaf-maven-plugin.version>
   </properties>
 
   <modules>
+    <!--
     <module>karaf-ads-feature</module>
     <module>karaf-ethernet-ip-feature</module>
     <module>karaf-modbus-feature</module>
     <module>karaf-s7-feature</module>
     <module>karaf-simulated-feature</module>
+    -->
     <!-- TODO: karaf-demo doesn't compile right now as slf4-api bundle dependency can't be resolved -->
+    <!--
     <module>karaf-demo-server</module>
+    -->
+    <module>karaf-features</module>
+    <module>karaf-itests</module>
   </modules>
 
   <build>
