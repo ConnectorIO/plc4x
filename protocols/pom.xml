@@ -43,6 +43,7 @@
     <module>firmata</module>
     <module>genericcan</module>
     <module>knxnetip</module>
+    <module>mbus</module>
     <module>modbus</module>
     <module>opcua</module>
     <module>plc4x</module>

@@ -41,6 +41,7 @@
     <module>eip</module>
     <module>firmata</module>
     <module>knxnetip</module>
+    <module>mbus</module>
     <module>mock</module>
     <module>modbus</module>
     <module>profinet</module>
