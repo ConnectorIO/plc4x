@@ -137,4 +137,6 @@ public interface WriteBuffer extends ByteOrderAware {
     }
 
     void popContext(String logicalName, WithWriterArgs... writerArgs);
+
+    byte[] getBytes(int startPos, int endPos);
 }

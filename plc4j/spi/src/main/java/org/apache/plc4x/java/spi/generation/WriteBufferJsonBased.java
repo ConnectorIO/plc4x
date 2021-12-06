@@ -328,4 +328,10 @@ public class WriteBufferJsonBased implements WriteBuffer, BufferCommons, AutoClo
             generator.writeStringField(String.format(PLC4X_ATTRIBUTE_FORMAT, logicalName, rwStringRepresentationKey), stringRepresentation.get());
         }
     }
+
+    @Override
+    public byte[] getBytes(int startPos, int endPos) {
+        return new byte[0];
+    }
+
 }

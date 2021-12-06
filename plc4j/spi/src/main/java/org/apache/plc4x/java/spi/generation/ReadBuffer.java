@@ -136,4 +136,6 @@ public interface ReadBuffer extends ByteOrderAware {
 
 
     void closeContext(String logicalName, WithReaderArgs... readerArgs);
+
+    byte[] getBytes(int startPos, int endPos);
 }

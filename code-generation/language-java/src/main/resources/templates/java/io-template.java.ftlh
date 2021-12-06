@@ -157,7 +157,7 @@ public class ${type.name}IO implements MessageInput<${type.name}> {
         <#assign checksumField = field.asChecksumField().orElseThrow()>
         <#assign typedField = field.asTypedField().orElseThrow()>
         <#assign namedField = field.asNamedField().orElseThrow()>
-
+        byte[] checksumRawData = readBuffer.getBytes(startPos, readBuffer.getPos());
         ${helper.getLanguageTypeNameForField(field)} ${namedField.name} = read${field.typeName?cap_first}Field("${namedField.name}", ${helper.getDataReaderCall(typedField.type)}, ${helper.toParseExpression(checksumField, checksumField.type, checksumField.checksumExpression, parserArguments)}${helper.getFieldOptions(typedField, parserArguments)});
         <#break>
     <#case "const">

@@ -16,88 +16,98 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-[discriminatedType 'MBusFrame'
-    [discriminator uint 8 'header'               ]
-    [typeSwitch 'header'
+[discriminatedType MBusFrame
+    [discriminator uint 8 header               ]
+    [typeSwitch header
         ['0xE5' AcknowledgeFrame
         ]
         ['0x10' ShortFrame
         ]
         ['0x68' DataFrame
-            [simple  uint 8 'len'                   ]
-            [padding uint 8 'lenCheck' 'len' '1'    ]
-            [const   uint 8 'headerCheck' '0x68'    ]
-            [simple  uint 8 'controlField'          ]
-            [simple  uint 8 'address'               ]
-            [simple  uint 8 'controlInformation'    ]
-            [simple  VariableDataStructure 'data' ['controlField', 'controlInformation', 'len'] ]
-            [checksum int 8  'crc' 'STATIC_CALL("org.apache.plc4x.java.mbus.helper.MBusHelper.crc", checksumRawData)']
-            [const   uint 8 'endFlag' '0x16'        ]
+            [simple  uint 8 len                                                                 ]
+            [padding uint 8 lenCheck                 'len' '1'                                  ]
+            [const   uint 8 headerCheck                   0x68                                  ]
+            [simple  uint 8 controlField                                                        ]
+            [simple  uint 8 address                                                             ]
+            [simple  uint 8 controlInformation                                                  ]
+            [simple  VariableDataStructure('controlField', 'controlInformation', 'len') data    ]
+            [checksum int 8  crc 'STATIC_CALL("crc", checksumRawData)'                          ]
+            [const   uint 8 endFlag                 0x16                                        ]
         ]
     ]
 ]
 
-[type 'VariableDataStructure' [uint 8 'controlField', uint 8 'ci', uint 8 'len']
-    [typeSwitch 'ci'
+[type VariableDataStructure (uint 8 controlField, uint 8 ci, uint 8 len)
+    [typeSwitch ci
         ['0x72' LongHeaderDataFrame
-            [simple SecondaryAddress 'address']
-            [simple ShortHeader 'header']
+            [simple SecondaryAddress address  ]
+            [simple ShortHeader      header   ]
         ]
     ]
-    [array DataRecord 'records' terminated 'curPos > len - 7']
+    //[manualArray byte fileName terminated 'STATIC_CALL("isSysexEnd", readBuffer)'
+    //  'STATIC_CALL("parseSysexString", readBuffer)'
+    //  'STATIC_CALL("serializeSysexString", writeBuffer, _value)'
+    //  'STATIC_CALL("lengthSysexString", fileName)'
+    //]
+    //[array DataRecord records terminated 'curPos > len - 7'          ]
+    [manualArray DataRecord records terminated 'STATIC_CALL("hasMoreRecords", readBuffer, curPos, len)'
+      'STATIC_CALL("parseRecord", readBuffer)'
+      'STATIC_CALL("serializeRecord", writeBuffer, _value)'
+      'ARRAY_SIZE_IN_BYTES(records) / 8'
+    ]
 ]
 
-[type 'SecondaryAddress'
-    [simple uint 32 'identifier']
-    [simple uint 16 'manufacturer']
-    [simple uint 8 'version']
-    [simple uint 8 'deviceType']
+[type SecondaryAddress
+    [simple uint 32 identifier    ]
+    [simple uint 16 manufacturer  ]
+    [simple uint 8  version       ]
+    [simple uint 8  deviceType    ]
 ]
 
-[type 'ShortHeader'
-    [simple uint 8 'accessNumber']
-    [simple uint 8 'status']
-    [simple uint 8 'encryptedBlocks']
-    [simple uint 8 'encryptionMode' ]
+[type ShortHeader
+    [simple uint 8    accessNumber    ]
+    [simple uint 8    status          ]
+    [simple uint 8    encryptedBlocks ]
+    [simple uint 8    encryptionMode  ]
 ]
 
-[type 'DataRecord'
-    [implicit bit 'extension' 'dife != null']
-    [simple uint 1 'storage']
-    [enum Function 'function']
-    [enum Coding 'coding']
-    [optional DataInformationFieldExtension 'dife' 'extension']
-    [simple ValueInformationBlock 'vif']
-    [array uint 8 'data' length 'coding.size / 8']
+[type DataRecord
+    [implicit bit extension 'dife != null']
+    [simple uint 1 storage   ]
+    [simple Function function  ]
+    [simple Coding coding      ]
+    [optional DataInformationFieldExtension dife 'extension'    ]
+    [simple ValueInformationBlock vif]
+    [array byte data length 'coding.size / 8']
 ]
 
-[type 'DataInformationField'
-    [implicit bit 'extension' 'dife != null']
-    [simple uint 1 'storage']
-    [enum Function 'function']
-    [enum Coding 'coding']
-    [optional DataInformationFieldExtension 'dife' 'extension']
+[type DataInformationField
+    [implicit bit      extension 'dife != null' ]
+    [simple   uint 1   storage                  ]
+    [simple     Function function                 ]
+    [simple     Coding   coding                   ]
+    [optional DataInformationFieldExtension dife 'extension'    ]
 ]
 
-[type 'DataInformationFieldExtension'
-    [implicit bit 'extension' 'dife != null']
-    [simple uint 1 'unit']
-    [simple uint 2 'tariff']
-    [simple uint 4 'storage']
-    [optional DataInformationFieldExtension 'dife' 'extension']
+[type DataInformationFieldExtension
+    [implicit bit extension 'dife != null']
+    [simple uint 1 unit]
+    [simple uint 2 tariff]
+    [simple uint 4 storage]
+    [optional DataInformationFieldExtension dife 'extension'    ]
 ]
 
-[type 'ValueInformationBlock'
-    [simple ValueInformationField 'vif']
+[type ValueInformationBlock
+    [simple ValueInformationField vif]
 ]
 
-[type 'ValueInformationField'
-    [implicit bit    'extension' 'vife != null']
-    [simple uint 7 'unitAndMultiplier']
-    [optional ValueInformationField 'vife' 'extension']
+[type ValueInformationField
+    [implicit bit    extension            'vife != null' ]
+    [simple   uint 7 unitAndMultiplier                   ]
+    [optional ValueInformationField vife  'extension'    ]
 ]
 
-[enum uint 4 'Coding' [uint 8 'size']
+[enum uint 4 Coding(uint 8 size)
     ['0x00' NO_DATA            ['0'] ]
     ['0x01' INT8               ['8'] ]
     ['0x02' INT16             ['16'] ]
@@ -116,7 +126,7 @@
     ['0x0F' SPECIAL_FUNCTION  ['-2'] ]
 ]
 
-[enum uint 2 'Function'
+[enum uint 2 Function
     ['0x00' INSTANT_VALUE]
     ['0x01' MAXIMUM_VALUE]
     ['0x02' MINIMUM_VALUE]

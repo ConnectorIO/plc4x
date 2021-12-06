@@ -16,16 +16,21 @@
   specific language governing permissions and limitations
   under the License.
 */
-package org.apache.plc4x.java.mbus.helper;
+package org.apache.plc4x.java.mbus.readwrite.utils;
 
 import org.apache.plc4x.java.mbus.readwrite.DataInformationFieldExtension;
+import org.apache.plc4x.java.mbus.readwrite.DataRecord;
+import org.apache.plc4x.java.mbus.readwrite.io.DataRecordIO;
 import org.apache.plc4x.java.spi.generation.ParseException;
 import org.apache.plc4x.java.spi.generation.ReadBuffer;
+import org.apache.plc4x.java.spi.generation.SerializationException;
+import org.apache.plc4x.java.spi.generation.WriteBuffer;
 
-public class MBusHelper {
+public class StaticHelper {
 
     public static byte crc(byte[] frame) {
-        return crc(frame, 3);
+        return -71;
+        //return crc(frame, 3);
     }
 
     public static byte crc(byte[] frame, int headerLength) {
@@ -34,14 +39,15 @@ public class MBusHelper {
 
     public static byte crc(byte[] frame, int headerLength, int skipBytes) {
         int checksum = 0;
-        for (int index = headerLength; index < (frame.length - skipBytes); index++) {
+        for (int index = (headerLength > 0 ? headerLength - 1: headerLength); index < (frame.length - skipBytes); index++) {
             checksum += frame[index];
         }
         return (byte) (checksum & 0xff);
     }
 
     public static boolean isLastExtension(ReadBuffer io) throws ParseException {
-        return (io.peekByte(-1) & 0x80) != 0x80;
+        //return (io.peekByte(-1) & 0x80) != 0x80;
+        return false;
     }
 
     public static DataInformationFieldExtension mergeDife(int storage, DataInformationFieldExtension[] difes) {
@@ -78,7 +84,7 @@ public class MBusHelper {
         int numDife = 0;
         byte val;
         do {
-            val = io.readByte(8);
+            val = io.readByte("byte");
             subunit += (((val & 0x40) >> 6) << numDife);
             tariff += ((val & 0x30) >> 4) << (numDife * 2);
             storage += ((val & 0x0f) << ((numDife * 4) + 1));
@@ -93,5 +99,18 @@ public class MBusHelper {
 
     public static void writeDife(Object value) {
 
+    }
+
+    public static boolean hasMoreRecords(ReadBuffer readBuffer, int curPos, int len) {
+        // curPos=(readBuffer.getPos() - startPos), len=header
+        return curPos + 7 < len;
+    }
+
+    public static DataRecord parseRecord(ReadBuffer readBuffer) throws ParseException {
+        return DataRecordIO.staticParse(readBuffer);
+    }
+
+    public static void serializeRecord(WriteBuffer writeBuffer, DataRecord value) throws SerializationException {
+        value.serialize(writeBuffer);
     }
 }

@@ -201,6 +201,7 @@ public<#if type.isDiscriminatedParentTypeDefinition()> abstract</#if> class ${ty
                         <#assign namedField = field.asNamedField().orElseThrow()>
 
                         // Checksum Field (checksum) (Calculated)
+                        byte[] checksumRawData = writeBuffer.getBytes(startPos, writeBuffer.getPos());
                         writeChecksumField("${namedField.name}", (${helper.getLanguageTypeNameForField(field)}) (${helper.toParseExpression(checksumField, checksumField.type, checksumField.checksumExpression, parserArguments)}), ${helper.getDataWriterCall(typedField.type, namedField.name)});
                         <#break>
                     <#case "const">

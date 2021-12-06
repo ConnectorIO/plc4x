@@ -287,4 +287,9 @@ public class WriteBufferXmlBased implements WriteBuffer, BufferCommons {
             throw new PlcRuntimeException(e);
         }
     }
+
+    @Override
+    public byte[] getBytes(int startPos, int endPos) {
+        return new byte[0];
+    }
 }

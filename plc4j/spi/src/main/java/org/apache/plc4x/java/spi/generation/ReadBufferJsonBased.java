@@ -425,4 +425,9 @@ public class ReadBufferJsonBased implements ReadBuffer, BufferCommons {
     private void move(int bits) {
         pos += bits;
     }
+
+    @Override
+    public byte[] getBytes(int startPos, int endPos) {
+        return new byte[0];
+    }
 }

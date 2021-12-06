@@ -21,16 +21,23 @@
 
   <name>Tests of MBus frames payload.</name>
 
+  <protocolName>mbus</protocolName>
+  <outputFlavor>read-write</outputFlavor>
+
   <testcase>
     <name>DIF: 03</name>
     <raw>03</raw>
     <root-type>DataInformationField</root-type>
     <xml>
-      <DataInformationField className="org.apache.plc4x.java.mbus.readwrite.DataInformationField">
-        <storage>0</storage>
-        <function>INSTANT_VALUE</function>
-        <coding>INT24</coding>
-        <dife/>
+      <DataInformationField>
+        <extension dataType="bit" bitLength="1">false</extension>
+        <storage dataType="uint" bitLength="1">0</storage>
+        <function>
+          <Function dataType="uint" bitLength="2" stringRepresentation="INSTANT_VALUE">0</Function>
+        </function>
+        <coding>
+          <Coding dataType="uint" bitLength="4" stringRepresentation="INT24">3</Coding>
+        </coding>
       </DataInformationField>
     </xml>
   </testcase>
@@ -40,15 +47,22 @@
     <raw>DA02</raw>
     <root-type>DataInformationField</root-type>
     <xml>
-      <DataInformationField className="org.apache.plc4x.java.mbus.readwrite.DataInformationField">
-        <storage>1</storage>
-        <function>MAXIMUM_VALUE</function>
-        <coding>BCD_4_DIGIT</coding>
-        <dife className="org.apache.plc4x.java.mbus.readwrite.DataInformationFieldExtension">
-          <unit>0</unit>
-          <tariff>0</tariff>
-          <storage>2</storage>
-          <dife/>
+      <DataInformationField>
+        <extension dataType="bit" bitLength="1">true</extension>
+        <storage dataType="uint" bitLength="1">1</storage>
+        <function>
+          <Function dataType="uint" bitLength="2" stringRepresentation="MAXIMUM_VALUE">1</Function>
+        </function>
+        <coding>
+          <Coding dataType="uint" bitLength="4" stringRepresentation="BCD_4_DIGIT">10</Coding>
+        </coding>
+        <dife>
+          <DataInformationFieldExtension>
+            <extension dataType="bit" bitLength="1">false</extension>
+            <unit dataType="uint" bitLength="1">0</unit>
+            <tariff dataType="uint" bitLength="2">0</tariff>
+            <storage dataType="uint" bitLength="4">2</storage>
+          </DataInformationFieldExtension>
         </dife>
       </DataInformationField>
     </xml>
@@ -59,15 +73,22 @@
     <raw>8B60</raw>
     <root-type>DataInformationField</root-type>
     <xml>
-      <DataInformationField className="org.apache.plc4x.java.mbus.readwrite.DataInformationField">
-        <storage>0</storage>
-        <function>INSTANT_VALUE</function>
-        <coding>BCD_6_DIGIT</coding>
-        <dife className="org.apache.plc4x.java.mbus.readwrite.DataInformationFieldExtension">
-          <unit>1</unit>
-          <tariff>2</tariff>
-          <storage>0</storage>
-          <dife/>
+      <DataInformationField>
+        <extension dataType="bit" bitLength="1">true</extension>
+        <storage dataType="uint" bitLength="1">0</storage>
+        <function>
+          <Function dataType="uint" bitLength="2" stringRepresentation="INSTANT_VALUE">0</Function>
+        </function>
+        <coding>
+          <Coding dataType="uint" bitLength="4" stringRepresentation="BCD_6_DIGIT">11</Coding>
+        </coding>
+        <dife>
+          <DataInformationFieldExtension>
+            <extension dataType="bit" bitLength="1">false</extension>
+            <unit dataType="uint" bitLength="1">1</unit>
+            <tariff dataType="uint" bitLength="2">2</tariff>
+            <storage dataType="uint" bitLength="4">0</storage>
+          </DataInformationFieldExtension>
         </dife>
       </DataInformationField>
     </xml>
@@ -78,26 +99,34 @@
     <raw>DA023B1301</raw>
     <root-type>DataRecord</root-type>
     <xml>
-      <DataRecord className="org.apache.plc4x.java.mbus.readwrite.DataRecord">
-        <storage>1</storage>
-        <function>MAXIMUM_VALUE</function>
-        <coding>BCD_4_DIGIT</coding>
-        <dife className="org.apache.plc4x.java.mbus.readwrite.DataInformationFieldExtension">
-          <unit>0</unit>
-          <tariff>0</tariff>
-          <storage>2</storage>
-          <dife/>
+      <DataRecord>
+        <extension dataType="bit" bitLength="1">true</extension>
+        <storage dataType="uint" bitLength="1">1</storage>
+        <function>
+          <Function dataType="uint" bitLength="2" stringRepresentation="MAXIMUM_VALUE">1</Function>
+        </function>
+        <coding>
+          <Coding dataType="uint" bitLength="4" stringRepresentation="BCD_4_DIGIT">10</Coding>
+        </coding>
+        <dife>
+          <DataInformationFieldExtension>
+            <extension dataType="bit" bitLength="1">false</extension>
+            <unit dataType="uint" bitLength="1">0</unit>
+            <tariff dataType="uint" bitLength="2">0</tariff>
+            <storage dataType="uint" bitLength="4">2</storage>
+          </DataInformationFieldExtension>
         </dife>
-        <vif className="org.apache.plc4x.java.mbus.readwrite.ValueInformationBlock">
-          <vif className="org.apache.plc4x.java.mbus.readwrite.ValueInformationField">
-            <unitAndMultiplier>59</unitAndMultiplier>
-            <vife/>
-          </vif>
+        <vif>
+          <ValueInformationBlock>
+            <vif>
+              <ValueInformationField>
+                <extension dataType="bit" bitLength="1">false</extension>
+                <unitAndMultiplier dataType="uint" bitLength="7">59</unitAndMultiplier>
+              </ValueInformationField>
+            </vif>
+          </ValueInformationBlock>
         </vif>
-        <data>
-          <data>19</data>
-          <data>1</data>
-        </data>
+        <data dataType="byte" bitLength="16">0x1301</data>
       </DataRecord>
     </xml>
   </testcase>
@@ -107,27 +136,34 @@
     <raw>8B6004371802</raw>
     <root-type>DataRecord</root-type>
     <xml>
-      <DataRecord className="org.apache.plc4x.java.mbus.readwrite.DataRecord">
-        <storage>0</storage>
-        <function>INSTANT_VALUE</function>
-        <coding>BCD_6_DIGIT</coding>
-        <dife className="org.apache.plc4x.java.mbus.readwrite.DataInformationFieldExtension">
-          <unit>1</unit>
-          <tariff>2</tariff>
-          <storage>0</storage>
-          <dife/>
+      <DataRecord>
+        <extension dataType="bit" bitLength="1">true</extension>
+        <storage dataType="uint" bitLength="1">0</storage>
+        <function>
+          <Function dataType="uint" bitLength="2" stringRepresentation="INSTANT_VALUE">0</Function>
+        </function>
+        <coding>
+          <Coding dataType="uint" bitLength="4" stringRepresentation="BCD_6_DIGIT">11</Coding>
+        </coding>
+        <dife>
+          <DataInformationFieldExtension>
+            <extension dataType="bit" bitLength="1">false</extension>
+            <unit dataType="uint" bitLength="1">1</unit>
+            <tariff dataType="uint" bitLength="2">2</tariff>
+            <storage dataType="uint" bitLength="4">0</storage>
+          </DataInformationFieldExtension>
         </dife>
-        <vif className="org.apache.plc4x.java.mbus.readwrite.ValueInformationBlock">
-          <vif className="org.apache.plc4x.java.mbus.readwrite.ValueInformationField">
-            <unitAndMultiplier>4</unitAndMultiplier>
-            <vife/>
-          </vif>
+        <vif>
+          <ValueInformationBlock>
+            <vif>
+              <ValueInformationField>
+                <extension dataType="bit" bitLength="1">false</extension>
+                <unitAndMultiplier dataType="uint" bitLength="7">4</unitAndMultiplier>
+              </ValueInformationField>
+            </vif>
+          </ValueInformationBlock>
         </vif>
-        <data>
-          <data>55</data>
-          <data>24</data>
-          <data>2</data>
-        </data>
+        <data dataType="byte" bitLength="24">0x371802</data>
       </DataRecord>
     </xml>
   </testcase>
@@ -137,7 +173,7 @@
     <raw>681F1F680802727856341224400107550000000313153100DA023B13018B60043718021816</raw>
     <root-type>MBusFrame</root-type>
     <xml>
-      <DataFrame className="org.apache.plc4x.java.mbus.readwrite.DataFrame">
+      <MBusFrame>
         <len>31</len>
         <controlField>8</controlField>
         <address>2</address>
@@ -218,7 +254,7 @@
             <encryptionMode>0</encryptionMode>
           </header>
         </data>
-      </DataFrame>
+      </MBusFrame>
     </xml>
   </testcase>
 
@@ -227,8 +263,8 @@
     <raw>68A7A76808017201004001EE4D04041D000000040673830100041440E526000322CC61000C7899090508046D0A12952C055BC0C41C42055F00D30242053E08707B3E052BACC8E54405FF013985553F05FF02E015243E02FD17000001741501703C01FF040001FD0F1702FD0D3E000DFD0C0F3530302D3831364D353352393335308C407994477073844013C69D0A00814092280A8C80407919531031848040141B97000081804093280A1F9016</raw>
     <root-type>MBusFrame</root-type>
     <xml>
-      <DataFrame className="org.apache.plc4x.java.mbus.readwrite.DataFrame">
-    </DataFrame>
+      <MBusFrame>
+      </MBusFrame>
     </xml>
   </testcase>
 

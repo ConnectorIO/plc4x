@@ -20,6 +20,7 @@ package org.apache.plc4x.java.mbus.helper;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.plc4x.java.mbus.readwrite.utils.StaticHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,7 +43,7 @@ class MBusHelperTest {
     @Test
     void calculateChecksum() throws DecoderException {
         byte[] frame = Hex.decodeHex(FRAME);
-        byte crc = MBusHelper.crc(frame, 4, 2);
+        byte crc = StaticHelper.crc(frame, 4, 2);
         assertThat(Integer.toHexString(crc)).isEqualTo("18");
     }
 }

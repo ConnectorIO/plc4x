@@ -298,4 +298,8 @@ public class ReadBufferXmlBased implements ReadBuffer, BufferCommons {
         }
     }
 
+    @Override
+    public byte[] getBytes(int startPos, int endPos) {
+        return new byte[0];
+    }
 }

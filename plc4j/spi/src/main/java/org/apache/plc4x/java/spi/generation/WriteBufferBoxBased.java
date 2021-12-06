@@ -257,4 +257,9 @@ public class WriteBufferBoxBased implements WriteBuffer, BufferCommons {
     public AsciiBox getBox() {
         return boxes.peek().getLeft();
     }
+
+    @Override
+    public byte[] getBytes(int startPos, int endPos) {
+        return new byte[0];
+    }
 }
