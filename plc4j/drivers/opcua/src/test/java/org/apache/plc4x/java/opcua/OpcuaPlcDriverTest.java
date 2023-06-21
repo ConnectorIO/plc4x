@@ -18,6 +18,7 @@
  */
 package org.apache.plc4x.java.opcua;
 
+import io.vavr.Tuple2;
 import io.vavr.collection.List;
 import org.apache.plc4x.java.DefaultPlcDriverManager;
 import org.apache.plc4x.java.api.PlcConnection;
@@ -27,21 +28,23 @@ import org.apache.plc4x.java.api.messages.PlcReadResponse;
 import org.apache.plc4x.java.api.messages.PlcWriteRequest;
 import org.apache.plc4x.java.api.messages.PlcWriteResponse;
 import org.apache.plc4x.java.api.types.PlcResponseCode;
+import org.apache.plc4x.java.opcua.security.SecurityPolicy;
 import org.assertj.core.api.Condition;
 import org.eclipse.milo.examples.server.ExampleServer;
-import org.junit.jupiter.api.*;
-
-import static org.apache.plc4x.java.opcua.OpcuaPlcDriver.INET_ADDRESS_PATTERN;
-import static org.apache.plc4x.java.opcua.OpcuaPlcDriver.URI_PATTERN;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 @Disabled("Currently seems to block")
 public class OpcuaPlcDriverTest {
@@ -142,6 +145,8 @@ public class OpcuaPlcDriverTest {
         }
 
         exampleServer = new ExampleServer();
+
+
         exampleServer.startup().get();
     }
 
@@ -187,10 +192,14 @@ public class OpcuaPlcDriverTest {
         }));
     }
 
-    @Test
-    public void readVariables() {
+
+    @ParameterizedTest
+    @EnumSource(SecurityPolicy.class)
+    public void readVariables(SecurityPolicy policy) {
         try {
-            PlcConnection opcuaConnection = new DefaultPlcDriverManager().getConnection(tcpConnectionAddress);
+            String connectionString = getConnectionString(policy);
+
+            PlcConnection opcuaConnection = new DefaultPlcDriverManager().getConnection(connectionString);
             Condition<PlcConnection> is_connected = new Condition<>(PlcConnection::isConnected, "is connected");
             assertThat(opcuaConnection).is(is_connected);
 
@@ -211,7 +220,7 @@ public class OpcuaPlcDriverTest {
             builder.addTagAddress("UInteger", UINTEGER_IDENTIFIER_READ_WRITE);
 
             builder.addTagAddress("BoolArray", BOOL_ARRAY_IDENTIFIER);
-            //builder.addTagAddress("ByteStringArray", BYTE_STRING_ARRAY_IDENTIFIER);
+//            builder.addTagAddress("ByteStringArray", BYTE_STRING_ARRAY_IDENTIFIER);
             builder.addTagAddress("ByteArray", BYTE_ARRAY_IDENTIFIER);
             builder.addTagAddress("DoubleArray", DOUBLE_ARRAY_IDENTIFIER);
             builder.addTagAddress("FloatArray", FLOAT_ARRAY_IDENTIFIER);
@@ -255,19 +264,22 @@ public class OpcuaPlcDriverTest {
             assertThat(response.getResponseCode("UInt16Array")).isEqualTo(PlcResponseCode.OK);
             assertThat(response.getResponseCode("UInt32Array")).isEqualTo(PlcResponseCode.OK);
             assertThat(response.getResponseCode("UInt64Array")).isEqualTo(PlcResponseCode.OK);
-
+//
             assertThat(response.getResponseCode("DoesNotExists")).isEqualTo(PlcResponseCode.NOT_FOUND);
 
             opcuaConnection.close();
             assert !opcuaConnection.isConnected();
         } catch (Exception e) {
-            fail("Exception during readVariables Test EXCEPTION: " + e.getMessage());
+            fail("Exception during readVariables Test EXCEPTION: ", e);
         }
     }
 
-    @Test
-    public void writeVariables() throws Exception {
-        PlcConnection opcuaConnection = new DefaultPlcDriverManager().getConnection(tcpConnectionAddress);
+    @ParameterizedTest
+    @EnumSource(SecurityPolicy.class)
+    public void writeVariables(SecurityPolicy policy) throws Exception {
+        String connectionString = getConnectionString(policy);
+
+        PlcConnection opcuaConnection = new DefaultPlcDriverManager().getConnection(connectionString);
         Condition<PlcConnection> is_connected = new Condition<>(PlcConnection::isConnected, "is connected");
         assertThat(opcuaConnection).is(is_connected);
 
@@ -446,4 +458,29 @@ public class OpcuaPlcDriverTest {
         }
     }
 
+    private String getConnectionString(SecurityPolicy policy) {
+        switch (policy) {
+            case NONE:
+                return tcpConnectionAddress;
+            case Basic256Sha256:
+            case Basic128Rsa15:
+                Path securityTempDir = Paths.get(System.getProperty("java.io.tmpdir"), "server");
+                String keyStoreFile = securityTempDir.resolve("security").resolve("example-server.pfx").toAbsolutePath().toString();
+
+                String certDirectory = securityTempDir.toAbsolutePath().toString();
+                String connectionParams = Stream.of(
+                        new Tuple2<>("keyStoreFile", keyStoreFile),
+                        new Tuple2<>("certDirectory", certDirectory),
+                        new Tuple2<>("keyStorePassword", "password"),
+                        new Tuple2<>("securityPolicy", policy)
+                    )
+                    .map(tuple -> tuple._1() + "=" + tuple._2())
+                    .collect(Collectors.joining(paramDivider));
+
+
+                return tcpConnectionAddress + paramSectionDivider + connectionParams;
+            default:
+                throw new IllegalStateException();
+        }
+    }
 }
