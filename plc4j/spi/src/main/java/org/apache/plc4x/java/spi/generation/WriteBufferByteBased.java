@@ -69,6 +69,10 @@ public class WriteBufferByteBased implements WriteBuffer, BufferCommons {
         return ArrayUtils.subarray(bb.array(), 0, getPos());
     }
 
+    public byte[] getBytes(int start, int end) {
+        return ArrayUtils.subarray(bb.array(), start, end);
+    }
+
     @Override
     public int getPos() {
         return (int) bo.getPos();
@@ -392,8 +396,8 @@ public class WriteBufferByteBased implements WriteBuffer, BufferCommons {
             case "UTF16LE":
             case "UTF16BE": {
                 bytes = value.getBytes(StandardCharsets.UTF_16);
-                if(bytes.length > 2) {
-                    bytes = new byte[] {
+                if (bytes.length > 2) {
+                    bytes = new byte[]{
                         bytes[2], bytes[3]
                     };
                 }
