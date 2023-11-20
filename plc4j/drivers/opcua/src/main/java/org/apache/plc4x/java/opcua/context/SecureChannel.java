@@ -23,6 +23,8 @@ import io.vavr.control.Try;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.ForkJoinPool.commonPool;
+import static org.apache.plc4x.java.opcua.readwrite.ChunkType.*;
+import static org.apache.plc4x.java.opcua.readwrite.MessageType.*;
 
 import java.time.Instant;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -66,9 +68,6 @@ import java.util.stream.Stream;
 public class SecureChannel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SecureChannel.class);
-    private static final String FINAL_CHUNK = "F";
-    private static final String CONTINUATION_CHUNK = "C";
-    private static final String ABORT_CHUNK = "A";
     private static final int VERSION = 0;
     private static final int DEFAULT_MAX_CHUNK_COUNT = 64;
     private static final int DEFAULT_MAX_MESSAGE_SIZE = 2097152;
@@ -200,7 +199,7 @@ public class SecureChannel {
         //TODO: We need to split large messages up into chunks if it is larger than the sendBufferSize
         //      This value is negotiated when opening a channel
 
-        OpcuaMessageRequest messageRequest = new OpcuaMessageRequest(FINAL_CHUNK,
+        OpcuaMessageRequest messageRequest = new OpcuaMessageRequest(FINAL.getValue(),
             channelId.get(),
             tokenId.get(),
             transactionId,
@@ -242,13 +241,13 @@ public class SecureChannel {
                                 LOGGER.debug("Failed to store incoming message in buffer");
                                 throw new PlcRuntimeException("Error while sending message");
                             }
-                            return p.getChunk().equals(FINAL_CHUNK);
+                            return p.getChunk().equals(FINAL.getValue());
                         } else {
                             return false;
                         }
                     })
                     .handle(opcuaResponse -> {
-                        if (opcuaResponse.getChunk().equals(FINAL_CHUNK)) {
+                        if (opcuaResponse.getChunk().equals(FINAL.getValue())) {
                             tokenId.set(opcuaResponse.getSecureTokenId());
                             channelId.set(opcuaResponse.getSecureChannelId());
 
@@ -269,7 +268,7 @@ public class SecureChannel {
         this.context = context;
 
         OpcuaHelloRequest hello = new OpcuaHelloRequest(
-            FINAL_CHUNK,
+            FINAL.getValue(),
             VERSION,
             DEFAULT_RECEIVE_BUFFER_SIZE,
             DEFAULT_SEND_BUFFER_SIZE,
@@ -341,7 +340,7 @@ public class SecureChannel {
             extObject.serialize(buffer);
 
             OpcuaOpenRequest openRequest = new OpcuaOpenRequest(
-                FINAL_CHUNK,
+                FINAL.getValue(),
                 0,
                 new PascalString(this.securityPolicy.getSecurityPolicyUri()),
                 this.publicCertificate,
@@ -734,7 +733,7 @@ public class SecureChannel {
         );
 
         OpcuaCloseRequest closeRequest = new OpcuaCloseRequest(
-            FINAL_CHUNK,
+            FINAL.getValue(),
             channelId.get(),
             tokenId.get(),
             transactionId,
@@ -769,7 +768,7 @@ public class SecureChannel {
         // Only the TCP transport supports login.
         LOGGER.debug("Opcua Driver running in ACTIVE mode, discovering endpoints");
 
-        OpcuaHelloRequest hello = new OpcuaHelloRequest(FINAL_CHUNK,
+        OpcuaHelloRequest hello = new OpcuaHelloRequest(FINAL.getValue(),
             VERSION,
             DEFAULT_RECEIVE_BUFFER_SIZE,
             DEFAULT_SEND_BUFFER_SIZE,
@@ -831,7 +830,7 @@ public class SecureChannel {
             extObject.serialize(buffer);
 
             OpcuaOpenRequest openRequest = new OpcuaOpenRequest(
-                FINAL_CHUNK,
+                FINAL.getValue(),
                 0,
                 SECURITY_POLICY_NONE,
                 NULL_BYTE_STRING,
@@ -926,7 +925,7 @@ public class SecureChannel {
             WriteBufferByteBased buffer = new WriteBufferByteBased(extObject.getLengthInBytes(), org.apache.plc4x.java.spi.generation.ByteOrder.LITTLE_ENDIAN);
             extObject.serialize(buffer);
 
-            OpcuaMessageRequest messageRequest = new OpcuaMessageRequest(FINAL_CHUNK,
+            OpcuaMessageRequest messageRequest = new OpcuaMessageRequest(FINAL.getValue(),
                 channelId.get(),
                 tokenId.get(),
                 nextSequenceNumber,
@@ -947,7 +946,7 @@ public class SecureChannel {
                             LOGGER.error("Failed to connect to opc ua server for the following reason:- {}, {}", ((ResponseHeader) fault.getResponseHeader()).getServiceResult().getStatusCode(), OpcuaStatusCode.enumForValue(((ResponseHeader) fault.getResponseHeader()).getServiceResult().getStatusCode()));
                             return;
                         } else {
-                            LOGGER.debug("Got Create Session Response Connection Response");
+                            LOGGER.debug("Got Endpoints Response");
                             GetEndpointsResponse response = (GetEndpointsResponse) message.getBody();
 
                             List<ExtensionObjectDefinition> endpoints = response.getEndpoints();
@@ -969,7 +968,7 @@ public class SecureChannel {
                             }
 
                             if (configuration.getSenderCertificate() == null) {
-                                throw new IllegalArgumentException("");
+                                throw new IllegalArgumentException("Could not find server endpoint matching policy " + securityPolicy.getSecurityPolicyUri());
                             }
 
                             try {
@@ -1017,7 +1016,7 @@ public class SecureChannel {
         );
 
         OpcuaCloseRequest closeRequest = new OpcuaCloseRequest(
-            FINAL_CHUNK,
+            FINAL.getValue(),
             channelId.get(),
             tokenId.get(),
             transactionId,
@@ -1109,7 +1108,7 @@ public class SecureChannel {
                         extObject.serialize(buffer);
 
                         OpcuaOpenRequest openRequest = new OpcuaOpenRequest(
-                            FINAL_CHUNK,
+                            FINAL.getValue(),
                             0,
                             new PascalString(this.securityPolicy.getSecurityPolicyUri()),
                             this.publicCertificate,
