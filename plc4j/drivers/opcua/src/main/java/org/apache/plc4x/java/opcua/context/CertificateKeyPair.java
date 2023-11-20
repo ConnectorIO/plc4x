@@ -19,6 +19,7 @@
 package org.apache.plc4x.java.opcua.context;
 
 import io.vavr.control.Try;
+import java.security.PrivateKey;
 import org.bouncycastle.asn1.x509.GeneralName;
 
 import java.security.KeyPair;
@@ -47,6 +48,10 @@ public class CertificateKeyPair {
 
     public X509Certificate getCertificate() {
         return certificate;
+    }
+
+    public PrivateKey getPrivateKey() {
+        return keyPair.getPrivate();
     }
 
     public byte[] getThumbPrint() {

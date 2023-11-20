@@ -20,6 +20,7 @@
 package org.apache.plc4x.java.opcua.context;
 
 import java.util.Optional;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.plc4x.java.api.exceptions.PlcRuntimeException;
 import org.apache.plc4x.java.opcua.config.OpcuaConfiguration;
 import org.apache.plc4x.java.opcua.readwrite.PascalByteString;
@@ -68,9 +69,9 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
     private String endpoint;
     private String transportEndpoint;
     private Boolean isEncrypted = false;
-    private PascalByteString thumbprint;
-    private byte[] senderCertificate;
     private CertificateKeyPair certificateKeyPair;
+    private X509Certificate serverCertificate;
+    private PascalByteString thumbprint;
 
     public void openKeyStore(OpcuaConfiguration configuration) throws Exception {
         this.isEncrypted = true;
@@ -82,21 +83,25 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
         File serverKeyStore = securityTempDir.toPath().resolve(configuration.getKeyStoreFile()).toFile();
 
-        File pkiDir = FileSystems.getDefault().getPath(certDirectory).resolve("pki").toFile();
         char[] password = configuration.getKeyStorePassword().toCharArray();
         if (!serverKeyStore.exists()) {
             certificateKeyPair = CertificateGenerator.generateCertificate();
             LOGGER.info("Creating new KeyStore at {}", serverKeyStore);
             keyStore.load(null, password);
-            keyStore.setKeyEntry("plc4x-certificate-alias", certificateKeyPair.getKeyPair().getPrivate(), password, new X509Certificate[]{certificateKeyPair.getCertificate()});
+            keyStore.setKeyEntry("plc4x-certificate-alias", certificateKeyPair.getPrivateKey(), password, new X509Certificate[]{ certificateKeyPair.getCertificate() });
             keyStore.store(new FileOutputStream(serverKeyStore), password);
         } else {
             LOGGER.info("Loading KeyStore at {}", serverKeyStore);
             keyStore.load(new FileInputStream(serverKeyStore), password);
             String alias = keyStore.aliases().nextElement();
-            KeyPair kp = new KeyPair(keyStore.getCertificate(alias).getPublicKey(),
-                (PrivateKey) keyStore.getKey(alias, password));
+            KeyPair kp = new KeyPair(keyStore.getCertificate(alias).getPublicKey(), (PrivateKey) keyStore.getKey(alias, password));
             certificateKeyPair = new CertificateKeyPair(kp, (X509Certificate) keyStore.getCertificate(alias));
+        }
+
+        if (configuration.getServerCertificate() != null) {
+            serverCertificate = configuration.getServerCertificate();
+            byte[] sha1 = DigestUtils.sha1(serverCertificate.getEncoded());
+            thumbprint = new PascalByteString(sha1.length, sha1);
         }
     }
 
@@ -128,12 +133,8 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
         return isEncrypted;
     }
 
-    public PascalByteString getThumbprint() {
-        return thumbprint;
-    }
-
-    public void setThumbprint(PascalByteString thumbprint) {
-        this.thumbprint = thumbprint;
+    public X509Certificate getServerCertificate() {
+        return serverCertificate;
     }
 
     public CertificateKeyPair getCertificateKeyPair() {
@@ -152,7 +153,7 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
         endpoint = "opc." + code + "://" + host + portAddition + transportEndpoint;
 
 
-        if (configuration.getSecurityPolicy() != null && !(configuration.getSecurityPolicy() == SecurityPolicy.NONE)) {
+        if (configuration.getSecurityPolicy() != null && configuration.getSecurityPolicy() != SecurityPolicy.NONE) {
             try {
                 openKeyStore(configuration);
             } catch (Exception e) {
@@ -178,4 +179,7 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
             .flatMap(CertificateKeyPair::getApplicationUri);
     }
 
+    public PascalByteString getThumbprint() {
+        return thumbprint;
+    }
 }

@@ -43,6 +43,7 @@ import org.eclipse.milo.opcua.sdk.server.identity.X509IdentityValidator;
 import org.eclipse.milo.opcua.sdk.server.util.HostnameUtil;
 import org.eclipse.milo.opcua.stack.core.StatusCodes;
 import org.eclipse.milo.opcua.stack.core.UaRuntimeException;
+import org.eclipse.milo.opcua.stack.core.channel.EncodingLimits;
 import org.eclipse.milo.opcua.stack.core.security.DefaultCertificateManager;
 import org.eclipse.milo.opcua.stack.core.security.DefaultTrustListManager;
 import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
@@ -133,7 +134,9 @@ public class TestMiloServer {
 
         Set<EndpointConfiguration> endpointConfigurations = createEndpointConfigurations(certificate);
 
+        EncodingLimits limits = new EncodingLimits(8196, 64, 2097152, 128);
         OpcUaServerConfig serverConfig = OpcUaServerConfig.builder()
+            .setEncodingLimits(limits)
             .setApplicationUri(applicationUri)
             .setApplicationName(LocalizedText.english("Eclipse Milo OPC UA Example Server"))
             .setEndpoints(endpointConfigurations)
@@ -182,23 +185,64 @@ public class TestMiloServer {
                         USER_TOKEN_POLICY_X509
                     );
 
-
                 EndpointConfiguration.Builder noSecurityBuilder = builder.copy()
                     .setSecurityPolicy(SecurityPolicy.None)
                     .setSecurityMode(MessageSecurityMode.None);
-
                 endpointConfigurations.add(buildTcpEndpoint(noSecurityBuilder));
 
                 // TCP Basic256Sha256 / SignAndEncrypt
                 endpointConfigurations.add(buildTcpEndpoint(
                     builder.copy()
                         .setSecurityPolicy(SecurityPolicy.Basic256Sha256)
+                        .setSecurityMode(MessageSecurityMode.Sign))
+                );
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Basic256Sha256)
+                        .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
+                );
+                // TCP Basic256 / SignAndEncrypt
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Basic256)
+                        .setSecurityMode(MessageSecurityMode.Sign))
+                );
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Basic256)
                         .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
                 );
                 // TCP Basic128Rsa15 / SignAndEncrypt
                 endpointConfigurations.add(buildTcpEndpoint(
                     builder.copy()
                         .setSecurityPolicy(SecurityPolicy.Basic128Rsa15)
+                        .setSecurityMode(MessageSecurityMode.Sign))
+                );
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Basic128Rsa15)
+                        .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
+                );
+                // TCP Aes128_Sha256_RsaOaep / SignAndEncrypt
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Aes128_Sha256_RsaOaep)
+                        .setSecurityMode(MessageSecurityMode.Sign))
+                );
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Aes128_Sha256_RsaOaep)
+                        .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
+                );
+                // TCP Aes256_Sha256_RsaPss / SignAndEncrypt
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Aes256_Sha256_RsaPss)
+                        .setSecurityMode(MessageSecurityMode.Sign))
+                );
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Aes256_Sha256_RsaPss)
                         .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
                 );
 
