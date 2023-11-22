@@ -25,6 +25,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.ForkJoinPool.commonPool;
 
 import java.time.Instant;
+import java.util.function.Function;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -40,14 +41,11 @@ import org.apache.plc4x.java.spi.generation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateEncodingException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -230,29 +228,32 @@ public class SecureChannel {
                     .unwrap(OpcuaAPU::getMessage)
                     .check(OpcuaMessageResponse.class::isInstance)
                     .unwrap(OpcuaMessageResponse.class::cast)
-                    .check(p -> {
-                        if (p.getRequestId() == transactionId) {
-                            try {
-                                messageBuffer.write(p.getMessage());
-                                if (!(senderSequenceNumber.incrementAndGet() == (p.getSequenceNumber()))) {
-                                    LOGGER.error("Sequence number isn't as expected, we might have missed a packet. - {} != {}", senderSequenceNumber.incrementAndGet(), p.getSequenceNumber());
-                                    context.fireDisconnected();
-                                }
-                            } catch (IOException e) {
-                                LOGGER.debug("Failed to store incoming message in buffer");
-                                throw new PlcRuntimeException("Error while sending message");
-                            }
-                            return p.getChunk().equals(FINAL_CHUNK);
-                        } else {
-                            return false;
-                        }
-                    })
+                    .check(p -> p.getRequestId() == transactionId)
+                    .check(p -> accumulate(chunkStorage, p))
+                    .unwrap(p -> mergeChunks(chunkStorage, p))
+//                    .check(p -> {
+//                        if (p.getRequestId() == transactionId) {
+//                            try {
+//                                messageBuffer.write(p.getMessage());
+//                                if (!(senderSequenceNumber.incrementAndGet() == (p.getSequenceNumber()))) {
+//                                    LOGGER.error("Sequence number isn't as expected, we might have missed a packet. - {} != {}", senderSequenceNumber.incrementAndGet(), p.getSequenceNumber());
+//                                    context.fireDisconnected();
+//                                }
+//                            } catch (IOException e) {
+//                                LOGGER.debug("Failed to store incoming message in buffer");
+//                                throw new PlcRuntimeException("Error while sending message");
+//                            }
+//                            return p.getChunk().equals(FINAL.getValue());
+//                        } else {
+//                            return false;
+//                        }
+//                    })
                     .handle(opcuaResponse -> {
                         if (opcuaResponse.getChunk().equals(FINAL_CHUNK)) {
                             tokenId.set(opcuaResponse.getSecureTokenId());
                             channelId.set(opcuaResponse.getSecureChannelId());
 
-                            commonPool().submit(() -> consumer.accept(messageBuffer.toByteArray()));
+                            dispatch(() -> consumer.accept(opcuaResponse.getMessage()));
                         }
                     });
             } catch (Exception e) {
@@ -346,8 +347,8 @@ public class SecureChannel {
                 new PascalString(this.securityPolicy.getSecurityPolicyUri()),
                 this.publicCertificate,
                 this.thumbprint,
-                transactionId,
-                transactionId,
+                requestId,
+                requestId,
                 buffer.getBytes()
             );
 
