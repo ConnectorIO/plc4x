@@ -19,14 +19,14 @@
 
 package org.apache.plc4x.java.opcua.protocol.chunk;
 
-public interface ChunkStorage<T, R> {
+public interface ChunkStorage {
 
     /**
      * Appends segmented frame.
      *
      * @param frame Segmented frame.
      */
-    void append(T frame);
+    void append(byte[] frame);
 
     /**
      * Gets accumulated size of stored data.
@@ -40,7 +40,7 @@ public interface ChunkStorage<T, R> {
      *
      * @return Assembled result.
      */
-    R get();
+    byte[] get();
 
     void reset();
 }

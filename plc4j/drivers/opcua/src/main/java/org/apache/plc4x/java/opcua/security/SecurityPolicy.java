@@ -9,24 +9,52 @@ import java.util.Arrays;
 
 public enum SecurityPolicy {
     NONE("http://opcfoundation.org/UA/SecurityPolicy#None",
-        new MacSignatureAlgorithm("", 0, 32),
+        new MacSignatureAlgorithm(""),
         new EncryptionAlgorithm(""),
         new SignatureAlgorithm("", "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"),
         new EncryptionAlgorithm(""),
-        1),
+        0, 0, 0, 1, 0
+    ),
 
     Basic128Rsa15("http://opcfoundation.org/UA/SecurityPolicy#Basic128Rsa15",
-        new MacSignatureAlgorithm("HmacSHA1", 20, 16),
+        new MacSignatureAlgorithm("HmacSHA1"),
         new EncryptionAlgorithm("AES/CBC/NoPadding"),
         new SignatureAlgorithm("SHA1withRSA", "http://www.w3.org/2000/09/xmldsig#rsa-sha1"),
         new EncryptionAlgorithm("RSA/ECB/PKCS1Padding"),
-        11),
+        20, 16, 16, 16, 16
+    ),
+
+    Basic256("http://opcfoundation.org/UA/SecurityPolicy#Basic256",
+        new MacSignatureAlgorithm("HmacSHA1"),
+        new EncryptionAlgorithm("AES/CBC/NoPadding"),
+        new SignatureAlgorithm("SHA1withRSA", "http://www.w3.org/2000/09/xmldsig#rsa-sha1"),
+        new EncryptionAlgorithm("RSA/ECB/OAEPWithSHA-1AndMGF1Padding"),
+        20, 24, 32, 16, 32
+    ),
+
     Basic256Sha256("http://opcfoundation.org/UA/SecurityPolicy#Basic256Sha256",
-        new MacSignatureAlgorithm("HmacSHA256", 32, 32),
+        new MacSignatureAlgorithm("HmacSHA256"),
         new EncryptionAlgorithm("AES/CBC/NoPadding"),
         new SignatureAlgorithm("SHA256withRSA", "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"),
         new EncryptionAlgorithm("RSA/ECB/OAEPWithSHA-1AndMGF1Padding"),
-        42);
+        32, 32, 32, 16, 32
+    ),
+
+    Aes128_Sha256_RsaOaep("http://opcfoundation.org/UA/SecurityPolicy#Aes128_Sha256_RsaOaep",
+        new MacSignatureAlgorithm("HmacSHA256"),
+        new EncryptionAlgorithm("AES/CBC/NoPadding"),
+        new SignatureAlgorithm("SHA256withRSA", "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"),
+        new EncryptionAlgorithm("RSA/ECB/OAEPWithSHA-1AndMGF1Padding"),
+        32, 32, 16, 16, 32
+    ),
+
+    Aes256_Sha256_RsaPss("http://opcfoundation.org/UA/SecurityPolicy#Aes256_Sha256_RsaPss",
+        new MacSignatureAlgorithm("HmacSHA256"),
+        new EncryptionAlgorithm("AES/CBC/NoPadding"),
+        new SignatureAlgorithm("SHA256withRSA/PSS", "http://opcfoundation.org/UA/security/rsa-pss-sha2-256"),
+        new EncryptionAlgorithm("RSA/ECB/OAEPWithSHA256AndMGF1Padding"),
+        32, 32, 32, 16, 32
+    );
 
 
     private final String securityPolicyUri;
@@ -36,20 +64,31 @@ public enum SecurityPolicy {
     private final EncryptionAlgorithm symmetricEncryptionAlgorithm;
     private final SignatureAlgorithm asymmetricSignatureAlgorithm;
     private final EncryptionAlgorithm asymmetricEncryptionAlgorithm;
-    private final int asymmetricPlainBlock;
+    private final int symmetricSignatureSize;
+    private final int signatureKeySize;
+    private final int encryptionKeySize;
+    private final int encryptionBlockSize;
+    private final int nonceLength;
 
     SecurityPolicy(String securityPolicyUri,
-                   MacSignatureAlgorithm symmetricSignatureAlgorithm,
-                   EncryptionAlgorithm symmetricEncryptionAlgorithm,
-                   SignatureAlgorithm asymmetricSignatureAlgorithm,
-                   EncryptionAlgorithm asymmetricEncryptionAlgorithm,
-                   int asymmetricPlainBlock) {
+        MacSignatureAlgorithm symmetricSignatureAlgorithm,
+        EncryptionAlgorithm symmetricEncryptionAlgorithm,
+        SignatureAlgorithm asymmetricSignatureAlgorithm,
+        EncryptionAlgorithm asymmetricEncryptionAlgorithm,
+        int symmetricSignatureSize,
+        int signatureKeySize, int encryptionKeySize,
+        int encryptionBlockSize, int nonceLength
+    ) {
         this.securityPolicyUri = securityPolicyUri;
         this.symmetricSignatureAlgorithm = symmetricSignatureAlgorithm;
         this.symmetricEncryptionAlgorithm = symmetricEncryptionAlgorithm;
         this.asymmetricSignatureAlgorithm = asymmetricSignatureAlgorithm;
         this.asymmetricEncryptionAlgorithm = asymmetricEncryptionAlgorithm;
-        this.asymmetricPlainBlock = asymmetricPlainBlock;
+        this.symmetricSignatureSize = symmetricSignatureSize;
+        this.signatureKeySize = signatureKeySize;
+        this.encryptionKeySize = encryptionKeySize;
+        this.encryptionBlockSize = encryptionBlockSize;
+        this.nonceLength = nonceLength;
     }
 
     public static SecurityPolicy findByName(String securityPolicy) {
@@ -79,21 +118,33 @@ public enum SecurityPolicy {
         return symmetricEncryptionAlgorithm;
     }
 
-    public int getAsymmetricPlainBlock() {
-        return asymmetricPlainBlock;
+    public int getSymmetricSignatureSize() {
+        return symmetricSignatureSize;
+    }
+
+    public int getSignatureKeySize() {
+        return signatureKeySize;
+    }
+
+    public int getEncryptionKeySize() {
+        return encryptionKeySize;
+    }
+
+    public int getEncryptionBlockSize() {
+        return encryptionBlockSize;
+    }
+
+    public int getNonceLength() {
+        return nonceLength;
     }
 
     public static class MacSignatureAlgorithm {
 
 
         private final String name;
-        private final int symmetricSignatureSize;
-        private final int keySize;
 
-        MacSignatureAlgorithm(String name, int symmetricSignatureSize, int keySize) {
+        MacSignatureAlgorithm(String name) {
             this.name = name;
-            this.symmetricSignatureSize = symmetricSignatureSize;
-            this.keySize = keySize;
         }
 
         public Mac getSignature() throws NoSuchAlgorithmException {
@@ -104,13 +155,6 @@ public enum SecurityPolicy {
             return name;
         }
 
-        public int getSymmetricSignatureSize() {
-            return symmetricSignatureSize;
-        }
-
-        public int getKeySize() {
-            return keySize;
-        }
     }
 
 

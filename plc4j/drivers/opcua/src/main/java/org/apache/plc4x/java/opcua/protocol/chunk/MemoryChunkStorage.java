@@ -23,19 +23,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class MemoryChunkStorage<T> implements ChunkStorage<T, byte[]> {
+public class MemoryChunkStorage implements ChunkStorage {
 
     private final List<byte[]> chunks = new ArrayList<>();
-    private final Function<T, byte[]> extractor;
     private long size = 0;
 
-    public MemoryChunkStorage(Function<T, byte[]> extractor) {
-        this.extractor = extractor;
-    }
-
     @Override
-    public void append(T frame) {
-        chunks.add(extractor.apply(frame));
+    public void append(byte[] frame) {
+        chunks.add(frame);
         size += chunks.get(chunks.size() - 1).length;
     }
 

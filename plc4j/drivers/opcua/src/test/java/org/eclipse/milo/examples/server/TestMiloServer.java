@@ -185,11 +185,9 @@ public class TestMiloServer {
                         USER_TOKEN_POLICY_X509
                     );
 
-
                 EndpointConfiguration.Builder noSecurityBuilder = builder.copy()
                     .setSecurityPolicy(SecurityPolicy.None)
                     .setSecurityMode(MessageSecurityMode.None);
-
                 endpointConfigurations.add(buildTcpEndpoint(noSecurityBuilder));
 
                 // TCP Basic256Sha256 / SignAndEncrypt
@@ -203,6 +201,17 @@ public class TestMiloServer {
                         .setSecurityPolicy(SecurityPolicy.Basic256Sha256)
                         .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
                 );
+                // TCP Basic256 / SignAndEncrypt
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Basic256)
+                        .setSecurityMode(MessageSecurityMode.Sign))
+                );
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Basic256)
+                        .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
+                );
                 // TCP Basic128Rsa15 / SignAndEncrypt
                 endpointConfigurations.add(buildTcpEndpoint(
                     builder.copy()
@@ -214,18 +223,7 @@ public class TestMiloServer {
                         .setSecurityPolicy(SecurityPolicy.Basic128Rsa15)
                         .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
                 );
-
-                /*
-                endpointConfigurations.add(buildTcpEndpoint(
-                    builder.copy()
-                        .setSecurityPolicy(SecurityPolicy.Aes128_Sha256_RsaOaep)
-                        .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
-                );
-                endpointConfigurations.add(buildTcpEndpoint(
-                    builder.copy()
-                        .setSecurityPolicy(SecurityPolicy.Aes256_Sha256_RsaPss)
-                        .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
-                );
+                // TCP Aes128_Sha256_RsaOaep / SignAndEncrypt
                 endpointConfigurations.add(buildTcpEndpoint(
                     builder.copy()
                         .setSecurityPolicy(SecurityPolicy.Aes128_Sha256_RsaOaep)
@@ -233,10 +231,20 @@ public class TestMiloServer {
                 );
                 endpointConfigurations.add(buildTcpEndpoint(
                     builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Aes128_Sha256_RsaOaep)
+                        .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
+                );
+                // TCP Aes256_Sha256_RsaPss / SignAndEncrypt
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
                         .setSecurityPolicy(SecurityPolicy.Aes256_Sha256_RsaPss)
                         .setSecurityMode(MessageSecurityMode.Sign))
                 );
-                */
+                endpointConfigurations.add(buildTcpEndpoint(
+                    builder.copy()
+                        .setSecurityPolicy(SecurityPolicy.Aes256_Sha256_RsaPss)
+                        .setSecurityMode(MessageSecurityMode.SignAndEncrypt))
+                );
 
                 EndpointConfiguration.Builder discoveryBuilder = builder.copy()
                     .setPath("/milo/discovery")
