@@ -98,6 +98,26 @@
           </excludes>
         </configuration>
       </plugin>
+      <!-- Check if all source files have the required apache license headers -->
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>license-check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <excludes>
+            <!-- exclude static test resources from release checks -->
+            <exclude>src/test/resources/chunk-calculation*.csv</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
