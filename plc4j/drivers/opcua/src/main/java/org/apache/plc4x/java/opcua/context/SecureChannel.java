@@ -65,7 +65,7 @@ public class SecureChannel {
     private static final String PASSWORD_ENCRYPTION_ALGORITHM = "http://www.w3.org/2001/04/xmlenc#rsa-oaep";
     public static final PascalString NULL_STRING = new PascalString("");
     public static final PascalByteString NULL_BYTE_STRING = new PascalByteString(-1, null);
-    public static final Pattern INET_ADDRESS_PATTERN = Pattern.compile("(.(?<transportCode>tcp))?://" +
+    public static final Pattern INET_ADDRESS_PATTERN = Pattern.compile("(.(?<transportCode>tcp|https?))?://" +
         "(?<transportHost>[\\w.-]+)(:" +
         "(?<transportPort>\\d*))?");
 
@@ -526,10 +526,11 @@ public class SecureChannel {
      */
     private boolean isEndpoint(EndpointDescription endpoint) throws PlcRuntimeException {
         // Split up the connection string into it's individual segments.
-        Matcher matcher = URI_PATTERN.matcher(endpoint.getEndpointUrl().getStringValue());
+        String endpointUri = endpoint.getEndpointUrl().getStringValue();
+        Matcher matcher = URI_PATTERN.matcher(endpointUri);
         if (!matcher.matches()) {
             throw new PlcRuntimeException(
-                "Endpoint returned from the server doesn't match the format '{protocol-code}:({transport-code})?//{transport-host}(:{transport-port})(/{transport-endpoint})'");
+                "Endpoint " + endpointUri + "  returned from the server doesn't match the format '{protocol-code}:({transport-code})?//{transport-host}(:{transport-port})(/{transport-endpoint})'");
         }
         LOGGER.trace("Using Endpoint {} {} {}", matcher.group("transportHost"), matcher.group("transportPort"), matcher.group("transportEndpoint"));
 

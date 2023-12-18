@@ -176,7 +176,9 @@ public class OpcuaSubscriptionHandle extends DefaultPlcSubscriptionHandle {
 
             //Make a copy of the outstanding requests, so it isn't modified while we are putting the ack list together.
             List<ExtensionObjectDefinition> acks = new ArrayList<>(outstandingAcknowledgements);
-            int ackLength = acks.isEmpty() ? -1 : acks.size();
+            // do not send -1 when requesting publish, the -1 value indicates NULL value
+            // which might result in corruption of subscription for some servers
+            int ackLength = acks.size();
             outstandingAcknowledgements.removeAll(acks);
 
             PublishRequest publishRequest = new PublishRequest(requestHeader, ackLength, acks);
