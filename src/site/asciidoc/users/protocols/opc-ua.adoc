@@ -64,8 +64,35 @@ will propagate over an '<address>/discovery' endpoint. The most common issue her
 configured and propagate the wrong external IP or URL address. If that is the case you can disable the discovery by
 configuring it with a `false` value.
 
-|| `username`  |   A username to authenticate to the OPCUA server with.
-|| `password`  |   A password to authenticate to the OPCUA server with. |
+The discovery phase is always conducted using `NONE` security policy.
+
+| `securityPolicy`  | `NONE` | The security policy applied to communication channel between driver and OPC UA server.
+Default value assumes. Possible options are `NONE`, `Basic128Rsa15`, `Basic256`, `Basic256Sha256`, `Aes128_Sha256_RsaOaep`, `Aes256_Sha256_RsaPss`.
+| `messageSecurity` | `SIGN_ENCRYPT` | The security policy applied to messages exchanged after handshake phase.
+Each handshake uses `SIGN_ENCRYPT` mode to securely negotiate encryption keys used later for symmetric encryption.
+In case when security policy defines secure value (i.e. `Basic256`) it will automatically impose full security on the message exchanges.
+
+| `certDirectory`    | | Filesystem location where security related files are expected to be found.
+| `keyStoreFile`     | | The Keystore file used to lookup client certificate and its private key.
+Please note that in case if no value is provided driver will generate self-signed certificate for negotiation phase.
+The keystore file is looked up under `$certDirectory/security/` directory.
+Expected keystore type is PKCS12 (default since Java 11).
+| `keyStorePassword` | | Java keystore password used to access keystore and private key.
+
+| `username`         | | A username to authenticate to the OPCUA server with.
+| `password`         | | A password to authenticate to the OPCUA server with.
+
+3+| TCP encoding options
+| `encoding.receiveBufferSize` |   65535 | Maximum size of received TCP transport message chunk value in bytes.
+| `encoding.sendBufferSize`    |   65535 | Maximum size of sent transport message chunk.
+| `encoding.maxMessageSize`    | 2097152 | Maximum size of complete message.
+| `encoding.maxChunkCount`     |      64 | Maximum number of chunks for both sent and received messages.
+
+3+| Timeout options
+| `channelLifetime`     | `3600000` | Time for which negotiated secure channel, its keys and session remains open. Value in milliseconds, by default 60 minutes.
+| `sessionTimeout`      |  `120000` | Expiry time for opened secure session, value in milliseconds. Defaults to 2 minutes.
+| `negotiationTimeout`  |   `60000` | Timeout for all negotiation steps prior acceptance of application level operations - this timeout applies to open secure channel, create session and close calls. Defaults to 60 seconds.
+| `requestTimeout`      |   `30000` | Timeout for read/write/subscribe calls. Value in milliseconds.
 
 |===
 
@@ -89,6 +116,32 @@ opcua:tcp://127.0.0.1:12686?discovery=true&username=admin&password=password
 
 Note the transport, port and options fields are optional.
 
+=== Secure communication
+The secure channel implementation within Apache PLC4X project have been tested against existing open source server implementations.
+This includes Eclipse Milo (all modes) as well as OPC Foundation .NET server (except `Basic128Rsa15`).
+Manual tests proven that driver is able to communicate with OPC UA server launched on PLCs as well as commercial simulators.
+
+Depending on actual configuration of remote end there might be necessity to prepare client certificate.
+Preparation of certificate is beyond driver, however in case when no client certificate is provided, it will be auto-generated to establish a session.
+
+The security modes differ between themselves by strength of applied signature and encryption algorithms.
+Driver is able to communicate with single security mode at the time.
+Additionally, to security policy it is possible to specify `messageSecurity` option which indicates expected security settings after initial handshake.
+By default, this option is set to `SIGN_ENCRYPT` which imposes high security settings and full encryption of exchanged message payloads.
+In case when additional diagnostics is needed payloads has to be traced through TRACE level log entries.
+The `SIGN` mode gives possibility o browse packets in tools such wireshark.
+
+==== Negotiation procedure
+Depending on settings driver might or might not attempt to discover endpoints from remote server.
+In case when `discovery` option is set to `true` driver will look up server certificate through connection attempt.
+The discovery option also enables checks of server endpoints for matching security settings.
+
+Once initial discovery is completed and driver finds endpoint matching its security settings it will launch second connection attempt.
+This attempt will propagate encoding limits described in table above.
+Role of these options is declaration of values accepted and expected by client.
+Once server returns its limits driver picks minimums of all these.
+The only one note is that driver takes minimum of local receive and remote send buffer size.
+It does same with local send and remote receive buffer.
 
 === Address Format
 To read, write and subscribe to data, the OPC UA driver uses the variable declaration string of the OPC UA server it is

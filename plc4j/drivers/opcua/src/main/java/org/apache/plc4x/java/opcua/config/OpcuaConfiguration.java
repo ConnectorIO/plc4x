@@ -19,9 +19,6 @@
 package org.apache.plc4x.java.opcua.config;
 
 import java.security.cert.X509Certificate;
-import java.time.Duration;
-import org.apache.plc4x.java.opcua.context.SecureChannel;
-import org.apache.plc4x.java.opcua.readwrite.PascalByteString;
 import org.apache.plc4x.java.opcua.security.MessageSecurity;
 import org.apache.plc4x.java.opcua.security.SecurityPolicy;
 import org.apache.plc4x.java.spi.configuration.Configuration;
@@ -31,11 +28,12 @@ import org.apache.plc4x.java.spi.configuration.annotations.defaults.BooleanDefau
 
 public class OpcuaConfiguration implements Configuration {
 
-    public static final long DEFAULT_CONNECTION_LIFETIME = 36000000;
+    public static final long DEFAULT_CHANNEL_LIFETIME = 3600000;
 
-    public static final long DEFAULT_REQUEST_TIMEOUT = 5 * 60 * 1000L;
+    public static final long DEFAULT_SESSION_TIMEOUT = 120000;
+    public static final long DEFAULT_NEGOTIATION_TIMEOUT = 60000;
 
-    public static final long DEFAULT_SESSION_TIMEOUT = 120000L;
+    public static final long DEFAULT_REQUEST_TIMEOUT = 30000;
 
     @ConfigurationParameter("protocolCode")
     private String protocolCode;
@@ -73,16 +71,16 @@ public class OpcuaConfiguration implements Configuration {
     private X509Certificate serverCertificate;
 
     @ConfigurationParameter("channelLifetime")
-    private long channelLifetime = DEFAULT_CONNECTION_LIFETIME;
-
-    @ConfigurationParameter("requestTimeout")
-    private long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
+    private long channelLifetime = DEFAULT_CHANNEL_LIFETIME;
 
     @ConfigurationParameter("sessionTimeout")
     private long sessionTimeout = DEFAULT_SESSION_TIMEOUT;
 
-    @ConfigurationParameter("openChannelTimeout")
-    private long openChannelTimeout = DEFAULT_REQUEST_TIMEOUT;
+    @ConfigurationParameter("negotiationTimeout")
+    private long negotiationTimeout = DEFAULT_NEGOTIATION_TIMEOUT;
+
+    @ConfigurationParameter("requestTimeout")
+    private long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
 
     @ComplexConfigurationParameter(prefix = "encoding", defaultOverrides = {}, requiredOverrides = {})
     private Limits limits = new Limits();
@@ -147,12 +145,16 @@ public class OpcuaConfiguration implements Configuration {
         return channelLifetime;
     }
 
+    public long getSessionTimeout() {
+        return sessionTimeout;
+    }
+
     public long getRequestTimeout() {
         return requestTimeout;
     }
 
-    public long getOpenChannelTimeout() {
-        return openChannelTimeout;
+    public long getNegotiationTimeout() {
+        return negotiationTimeout;
     }
 
     @Override

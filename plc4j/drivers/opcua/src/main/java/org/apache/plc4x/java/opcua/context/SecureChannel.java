@@ -54,7 +54,6 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -89,7 +88,7 @@ public class SecureChannel {
     private final RequestTransactionManager tm;
     private final OpcuaConfiguration configuration;
     private final OpcuaDriverContext driverContext;
-    private Conversation conversation;
+    private final Conversation conversation;
     private ScheduledFuture<?> keepAlive;
     private final List<String> endpoints = new ArrayList<>();
     private double sessionTimeout;
@@ -101,6 +100,7 @@ public class SecureChannel {
         this.configuration = configuration;
         this.driverContext = driverContext;
         this.endpoint = new PascalString(driverContext.getEndpoint());
+        this.sessionTimeout = configuration.getSessionTimeout();
         if (authentication != null) {
             if (authentication instanceof PlcUsernamePasswordAuthentication) {
                 this.username = ((PlcUsernamePasswordAuthentication) authentication).getUsername();
@@ -155,7 +155,7 @@ public class SecureChannel {
     public CompletableFuture<OpenSecureChannelResponse> onConnectOpenSecureChannel(SecurityTokenRequestType securityTokenRequestType) {
         LOGGER.debug("Sending open secure channel message to {}", this.driverContext.getEndpoint());
 
-        RequestHeader requestHeader = conversation.createRequestHeader(configuration.getOpenChannelTimeout(), 0);
+        RequestHeader requestHeader = conversation.createRequestHeader(configuration.getNegotiationTimeout(), 0);
 
         OpenSecureChannelRequest openSecureChannelRequest;
         if (conversation.getSecurityPolicy() != SecurityPolicy.NONE) {

@@ -24,22 +24,19 @@ import org.apache.plc4x.java.spi.configuration.annotations.ConfigurationParamete
 
 public class Limits implements Configuration {
 
-    private static final int DEFAULT_MAX_CHUNK_COUNT = 64;
-    private static final int DEFAULT_MAX_MESSAGE_SIZE = 2097152;
     private static final int DEFAULT_RECEIVE_BUFFER_SIZE = 65535;
     private static final int DEFAULT_SEND_BUFFER_SIZE = 65535;
+    private static final int DEFAULT_MAX_MESSAGE_SIZE = 2097152;
+    private static final int DEFAULT_MAX_CHUNK_COUNT = 64;
 
-    public static final Limits DEFAULT = new Limits(
-        DEFAULT_RECEIVE_BUFFER_SIZE,
-        DEFAULT_SEND_BUFFER_SIZE,
-        DEFAULT_MAX_MESSAGE_SIZE,
-        DEFAULT_MAX_CHUNK_COUNT
-    );
-
-    private final int receiveBufferSize;
-    private final int sendBufferSize;
-    private final int maxMessageSize;
-    private final int maxChunkCount;
+    @ConfigurationParameter("receiveBufferSize")
+    private int receiveBufferSize;
+    @ConfigurationParameter("sendBufferSize")
+    private int sendBufferSize;
+    @ConfigurationParameter("maxMessageSize")
+    private int maxMessageSize;
+    @ConfigurationParameter("maxChunkCount")
+    private int maxChunkCount;
 
     public Limits() {
         this(DEFAULT_RECEIVE_BUFFER_SIZE, DEFAULT_SEND_BUFFER_SIZE, DEFAULT_MAX_MESSAGE_SIZE, DEFAULT_MAX_CHUNK_COUNT);

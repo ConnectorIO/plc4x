@@ -179,7 +179,7 @@ public class Conversation {
         //CompletableFuture<OpcuaAcknowledgeResponse> future = new CompletableFuture<>();
 
         CompletableFuture<OpcuaAcknowledgeResponse> future = new CompletableFuture<>();
-        sendRequest(request, future, configuration.getOpenChannelTimeout())
+        sendRequest(request, future, configuration.getNegotiationTimeout())
             .unwrap(OpcuaAPU::getMessage)
             .check(OpcuaAcknowledgeResponse.class::isInstance)
             .unwrap(OpcuaAcknowledgeResponse.class::cast)
@@ -239,7 +239,7 @@ public class Conversation {
         for (int count = chunks.size(), index = 0; index < count; index++) {
             boolean last = index + 1 == count;
             if (last) {
-                sendRequest(chunks.get(index), future, configuration.getRequestTimeout())
+                sendRequest(chunks.get(index), future, configuration.getNegotiationTimeout())
                     .unwrap(OpcuaAPU::getMessage)
                     .check(replyType::isInstance)
                     .unwrap(replyType::cast)
