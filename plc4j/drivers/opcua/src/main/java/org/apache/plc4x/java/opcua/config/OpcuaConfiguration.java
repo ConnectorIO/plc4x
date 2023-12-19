@@ -63,9 +63,6 @@ public class OpcuaConfiguration implements Configuration {
     @ConfigurationParameter("keyStoreFile")
     private String keyStoreFile;
 
-    @ConfigurationParameter("certDirectory")
-    private String certDirectory;
-
     @ConfigurationParameter("keyStorePassword")
     private String keyStorePassword;
     private X509Certificate serverCertificate;
@@ -107,10 +104,6 @@ public class OpcuaConfiguration implements Configuration {
 
     public String getPassword() {
         return password;
-    }
-
-    public String getCertDirectory() {
-        return certDirectory;
     }
 
     public SecurityPolicy getSecurityPolicy() {
@@ -165,7 +158,6 @@ public class OpcuaConfiguration implements Configuration {
             ", password='" + (password != null ? "******" : null) + '\'' +
             ", securityPolicy='" + securityPolicy + '\'' +
             ", keyStoreFile='" + keyStoreFile + '\'' +
-            ", certDirectory='" + certDirectory + '\'' +
             ", keyStorePassword='" + (keyStorePassword != null ? "******" : null) + '\'' +
             ", limits=" + limits +
             '}';

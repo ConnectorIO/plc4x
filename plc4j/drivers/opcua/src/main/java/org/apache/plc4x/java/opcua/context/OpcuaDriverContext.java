@@ -19,6 +19,10 @@
 
 package org.apache.plc4x.java.opcua.context;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
 import java.util.Optional;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.plc4x.java.api.exceptions.PlcRuntimeException;
@@ -73,18 +77,21 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
     private X509Certificate serverCertificate;
     private PascalByteString thumbprint;
 
-    public void openKeyStore(OpcuaConfiguration configuration) throws Exception {
+    public void openKeyStore(OpcuaConfiguration configuration) throws IOException, GeneralSecurityException {
         this.isEncrypted = true;
-        String certDirectory = configuration.getCertDirectory();
-        File securityTempDir = new File(certDirectory, "security");
-        if (!securityTempDir.exists() && !securityTempDir.mkdirs()) {
-            throw new PlcRuntimeException("Unable to create directory please confirm folder permissions on " + certDirectory);
-        }
-        KeyStore keyStore = KeyStore.getInstance("PKCS12");
-        File serverKeyStore = securityTempDir.toPath().resolve(configuration.getKeyStoreFile()).toFile();
 
+        File serverKeyStore = null;
+        if (configuration.getKeyStoreFile() != null) {
+            serverKeyStore = Paths.get(configuration.getKeyStoreFile()).toFile();
+            if (!serverKeyStore.exists()) {
+                throw new FileNotFoundException("Invalid keyStoreFile parameter - specified file does not exist");
+            }
+        }
+
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
         char[] password = configuration.getKeyStorePassword().toCharArray();
-        if (!serverKeyStore.exists()) {
+        if (serverKeyStore == null) {
+            serverKeyStore = File.createTempFile("plc4x_opcua_driver", "pfx");
             certificateKeyPair = CertificateGenerator.generateCertificate();
             LOGGER.info("Creating new KeyStore at {}", serverKeyStore);
             keyStore.load(null, password);
@@ -156,8 +163,8 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
         if (configuration.getSecurityPolicy() != null && configuration.getSecurityPolicy() != SecurityPolicy.NONE) {
             try {
                 openKeyStore(configuration);
-            } catch (Exception e) {
-                throw new PlcRuntimeException("Unable to open keystore, please confirm you have the correct permissions");
+            } catch (IOException | GeneralSecurityException e) {
+                throw new PlcRuntimeException("Unable to open keystore, please confirm you have the correct permissions", e);
             }
         }
     }

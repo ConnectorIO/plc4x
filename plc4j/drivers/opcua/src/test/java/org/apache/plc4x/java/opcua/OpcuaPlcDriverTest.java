@@ -19,6 +19,8 @@
 package org.apache.plc4x.java.opcua;
 
 import java.lang.reflect.Array;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -521,20 +523,15 @@ public class OpcuaPlcDriverTest {
             case Basic256Sha256:
             case Aes128_Sha256_RsaOaep:
             case Aes256_Sha256_RsaPss:
-                Path securityTempDir = Paths.get(System.getProperty("java.io.tmpdir"), "server");
-                String keyStoreFile = securityTempDir.resolve("security").resolve("example-server.pfx").toAbsolutePath().toString();
-
-                String certDirectory = securityTempDir.toAbsolutePath().toString();
+                Path keyStoreFile = Paths.get(System.getProperty("java.io.tmpdir"), "server", "security", "example-server.pfx");
                 String connectionParams = Stream.of(
-                        entry("keyStoreFile", keyStoreFile),
-                        entry("certDirectory", certDirectory),
+                        entry("keyStoreFile", keyStoreFile.toAbsolutePath().toString().replace("\\", "/")), // handle windows paths
                         entry("keyStorePassword", "password"),
                         entry("securityPolicy", policy.name()),
                         entry("messageSecurity", messageSecurity.name())
                     )
-                    .map(tuple -> tuple.getKey() + "=" + tuple.getValue())
+                    .map(tuple -> tuple.getKey() + "=" + URLEncoder.encode(tuple.getValue(), Charset.defaultCharset()))
                     .collect(Collectors.joining(paramDivider));
-
 
                 return tcpConnectionAddress + paramSectionDivider + connectionParams;
             default:
