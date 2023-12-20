@@ -527,6 +527,8 @@ public class OpcuaPlcDriverTest {
                 String connectionParams = Stream.of(
                         entry("keyStoreFile", keyStoreFile.toAbsolutePath().toString().replace("\\", "/")), // handle windows paths
                         entry("keyStorePassword", "password"),
+                        entry("trustStoreFile", keyStoreFile.toAbsolutePath().toString().replace("\\", "/")), // handle windows paths
+                        entry("trustStorePassword", "password"),
                         entry("securityPolicy", policy.name()),
                         entry("messageSecurity", messageSecurity.name())
                     )

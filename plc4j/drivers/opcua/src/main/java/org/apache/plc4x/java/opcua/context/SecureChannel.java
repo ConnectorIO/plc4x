@@ -24,14 +24,18 @@ import static org.apache.plc4x.java.opcua.readwrite.ChunkType.*;
 import java.io.ByteArrayInputStream;
 import java.security.GeneralSecurityException;
 import java.security.Signature;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.plc4x.java.api.authentication.PlcAuthentication;
@@ -129,9 +133,10 @@ public class SecureChannel {
             this.remoteCertificateThumbprint = NULL_BYTE_STRING;
         } else {
             CertificateKeyPair keyPair = driverContext.getCertificateKeyPair();
-            this.remoteCertificateThumbprint = driverContext.getThumbprint();
             try {
                 byte[] encoded = keyPair.getCertificate().getEncoded();
+                byte[] thumbprint = DigestUtils.sha1(encoded);
+                this.remoteCertificateThumbprint = new PascalByteString(thumbprint.length, thumbprint);
                 this.localCertificateString = new PascalByteString(encoded.length, encoded);
             } catch (CertificateEncodingException e) {
                 throw new PlcRuntimeException("Could not decode certificate", e);
@@ -310,7 +315,13 @@ public class SecureChannel {
 
     private CompletableFuture<ActivateSessionResponse> onConnectActivateSessionRequest(CreateSessionResponse sessionResponse) {
         LOGGER.debug("Sending activate session request to {}", this.driverContext.getEndpoint());
-        conversation.setRemoteCertificate(getX509Certificate(sessionResponse.getServerCertificate().getStringValue()));
+        X509Certificate[] certificates = getX509Certificates(sessionResponse.getServerCertificate().getStringValue());
+        try {
+            driverContext.getTrustManager().checkServerTrusted(certificates);
+        } catch (CertificateException e) {
+            throw new PlcRuntimeException("Could not verify certificate trust anchor", e);
+        }
+        conversation.setRemoteCertificate(certificates[0]);
         conversation.setRemoteNonce(sessionResponse.getServerNonce().getStringValue());
 
         String[] endpoints = new String[3];
@@ -634,11 +645,15 @@ public class SecureChannel {
         return null;
     }
 
-    public static X509Certificate getX509Certificate(byte[] certificate) {
+    public static X509Certificate[] getX509Certificates(byte[] certificate) {
         try {
             CertificateFactory factory = CertificateFactory.getInstance("X.509");
-            return (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(certificate));
-        } catch (Exception e) {
+            Collection<? extends Certificate> certificates = factory.generateCertificates(new ByteArrayInputStream(certificate));
+            return certificates.stream()
+                .filter(X509Certificate.class::isInstance)
+                .map(X509Certificate.class::cast)
+                .toArray(X509Certificate[]::new);
+        } catch (GeneralSecurityException e) {
             LOGGER.error("Unable to get certificate from String {}", certificate);
             return null;
         }

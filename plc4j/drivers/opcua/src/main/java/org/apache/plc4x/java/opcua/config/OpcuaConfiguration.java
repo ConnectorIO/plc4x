@@ -18,7 +18,14 @@
  */
 package org.apache.plc4x.java.opcua.config;
 
+import static org.apache.plc4x.java.opcua.context.SecureChannel.getX509Certificates;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.security.KeyStore;
 import java.security.cert.X509Certificate;
+import java.util.Objects;
 import org.apache.plc4x.java.opcua.security.MessageSecurity;
 import org.apache.plc4x.java.opcua.security.SecurityPolicy;
 import org.apache.plc4x.java.spi.configuration.Configuration;
@@ -63,8 +70,24 @@ public class OpcuaConfiguration implements Configuration {
     @ConfigurationParameter("keyStoreFile")
     private String keyStoreFile;
 
+    @ConfigurationParameter("keyStoreType")
+    private String keyStoreType = KeyStore.getDefaultType();
+
     @ConfigurationParameter("keyStorePassword")
     private String keyStorePassword;
+
+    @ConfigurationParameter("trustStoreFile")
+    private String trustStoreFile;
+
+    @ConfigurationParameter("trustStoreType")
+    private String trustStoreType = KeyStore.getDefaultType();
+
+    @ConfigurationParameter("trustStorePassword")
+    private String trustStorePassword;
+
+    @ConfigurationParameter("serverCertificateFile")
+    private String serverCertificateFile;
+
     private X509Certificate serverCertificate;
 
     @ConfigurationParameter("channelLifetime")
@@ -118,8 +141,24 @@ public class OpcuaConfiguration implements Configuration {
         return keyStoreFile;
     }
 
-    public String getKeyStorePassword() {
-        return keyStorePassword;
+    public String getKeyStoreType() {
+        return keyStoreType;
+    }
+
+    public char[] getKeyStorePassword() {
+        return keyStorePassword == null ? null : keyStorePassword.toCharArray();
+    }
+
+    public String getTrustStoreFile() {
+        return trustStoreFile;
+    }
+
+    public String getTrustStoreType() {
+        return trustStoreType;
+    }
+
+    public char[] getTrustStorePassword() {
+        return trustStorePassword == null ? null : trustStorePassword.toCharArray();
     }
 
     public Limits getEncodingLimits() {
@@ -127,6 +166,14 @@ public class OpcuaConfiguration implements Configuration {
     }
 
     public X509Certificate getServerCertificate() {
+        if (serverCertificate == null && serverCertificateFile != null) {
+          try {
+              byte[] certificate = Files.readAllBytes(new File(serverCertificateFile).toPath());
+              serverCertificate = Objects.requireNonNull(getX509Certificates(certificate))[0];
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
         return serverCertificate;
     }
 
@@ -152,14 +199,29 @@ public class OpcuaConfiguration implements Configuration {
 
     @Override
     public String toString() {
-        return "OpcuaConfiguration{" +
-            "discovery=" + discovery +
+        return "OpcuaConfiguration" +
+            "{ protocolCode='" + protocolCode + '\'' +
+            ", transportCode='" + transportCode + '\'' +
+            ", transportConfig='" + transportConfig + '\'' +
+            ", discovery=" + discovery +
             ", username='" + username + '\'' +
-            ", password='" + (password != null ? "******" : null) + '\'' +
-            ", securityPolicy='" + securityPolicy + '\'' +
+            ", password='" + password + '\'' +
+            ", securityPolicy=" + securityPolicy +
+            ", messageSecurity=" + messageSecurity +
             ", keyStoreFile='" + keyStoreFile + '\'' +
-            ", keyStorePassword='" + (keyStorePassword != null ? "******" : null) + '\'' +
+            ", keyStoreType='" + keyStoreType + '\'' +
+            ", keyStorePassword='" + keyStorePassword + '\'' +
+            ", trustStoreFile='" + trustStoreFile + '\'' +
+            ", trustStoreType='" + trustStoreType + '\'' +
+            ", trustStorePassword='" + trustStorePassword + '\'' +
+            ", serverCertificateFile='" + serverCertificateFile + '\'' +
+            ", serverCertificate=" + serverCertificate +
+            ", channelLifetime=" + channelLifetime +
+            ", sessionTimeout=" + sessionTimeout +
+            ", negotiationTimeout=" + negotiationTimeout +
+            ", requestTimeout=" + requestTimeout +
             ", limits=" + limits +
+            ", encodingLimits=" + getEncodingLimits() +
             '}';
     }
 }

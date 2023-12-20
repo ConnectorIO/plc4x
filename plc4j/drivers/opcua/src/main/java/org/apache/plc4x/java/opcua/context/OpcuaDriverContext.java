@@ -21,6 +21,7 @@ package org.apache.plc4x.java.opcua.context;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.Optional;
@@ -28,7 +29,10 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.plc4x.java.api.exceptions.PlcRuntimeException;
 import org.apache.plc4x.java.opcua.config.OpcuaConfiguration;
 import org.apache.plc4x.java.opcua.readwrite.PascalByteString;
+import org.apache.plc4x.java.opcua.security.PermissiveCertificateVerifier;
 import org.apache.plc4x.java.opcua.security.SecurityPolicy;
+import org.apache.plc4x.java.opcua.security.TrustStoreCertificateVerifier;
+import org.apache.plc4x.java.opcua.security.CertificateVerifier;
 import org.apache.plc4x.java.spi.configuration.HasConfiguration;
 import org.apache.plc4x.java.spi.context.DriverContext;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -37,8 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.file.FileSystems;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PrivateKey;
@@ -72,44 +74,49 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
     private String port;
     private String endpoint;
     private String transportEndpoint;
-    private Boolean isEncrypted = false;
     private CertificateKeyPair certificateKeyPair;
     private X509Certificate serverCertificate;
-    private PascalByteString thumbprint;
+    private CertificateVerifier trustManager = new PermissiveCertificateVerifier();
 
     public void openKeyStore(OpcuaConfiguration configuration) throws IOException, GeneralSecurityException {
-        this.isEncrypted = true;
-
-        File serverKeyStore = null;
-        if (configuration.getKeyStoreFile() != null) {
-            serverKeyStore = Paths.get(configuration.getKeyStoreFile()).toFile();
-            if (!serverKeyStore.exists()) {
-                throw new FileNotFoundException("Invalid keyStoreFile parameter - specified file does not exist");
-            }
-        }
-
-        KeyStore keyStore = KeyStore.getInstance("PKCS12");
-        char[] password = configuration.getKeyStorePassword().toCharArray();
-        if (serverKeyStore == null) {
-            serverKeyStore = File.createTempFile("plc4x_opcua_driver", "pfx");
+        if (configuration.getKeyStoreFile() == null) {
             certificateKeyPair = CertificateGenerator.generateCertificate();
-            LOGGER.info("Creating new KeyStore at {}", serverKeyStore);
-            keyStore.load(null, password);
-            keyStore.setKeyEntry("plc4x-certificate-alias", certificateKeyPair.getPrivateKey(), password, new X509Certificate[]{ certificateKeyPair.getCertificate() });
-            keyStore.store(new FileOutputStream(serverKeyStore), password);
         } else {
-            LOGGER.info("Loading KeyStore at {}", serverKeyStore);
-            keyStore.load(new FileInputStream(serverKeyStore), password);
+            LOGGER.info("Loading KeyStore {}", configuration.getKeyStoreFile());
+            KeyStore keyStore = openKeyStore(configuration.getKeyStoreFile(), configuration.getKeyStoreType(), configuration.getKeyStorePassword());
             String alias = keyStore.aliases().nextElement();
-            KeyPair kp = new KeyPair(keyStore.getCertificate(alias).getPublicKey(), (PrivateKey) keyStore.getKey(alias, password));
+            KeyPair kp = new KeyPair(keyStore.getCertificate(alias).getPublicKey(), (PrivateKey) keyStore.getKey(alias, configuration.getKeyStorePassword()));
+
             certificateKeyPair = new CertificateKeyPair(kp, (X509Certificate) keyStore.getCertificate(alias));
         }
 
-        if (configuration.getServerCertificate() != null) {
-            serverCertificate = configuration.getServerCertificate();
-            byte[] sha1 = DigestUtils.sha1(serverCertificate.getEncoded());
-            thumbprint = new PascalByteString(sha1.length, sha1);
+        if (configuration.getTrustStoreFile() != null) {
+            KeyStore trustStore = openKeyStore(configuration.getTrustStoreFile(), configuration.getTrustStoreType(), configuration.getTrustStorePassword());
+            trustManager = new TrustStoreCertificateVerifier(trustStore);
+        } else if (configuration.getServerCertificate() != null) {
+            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            trustStore.load(null, null);
+            trustStore.setCertificateEntry("plc4x", configuration.getServerCertificate());
+            trustManager = new TrustStoreCertificateVerifier(trustStore);
+        } else {
+            if (!configuration.isDiscovery()) {
+                throw new IllegalStateException("Invalid configuration detected, server certificate is not set, but secure connection been requested");
+            }
         }
+    }
+
+    private static KeyStore openKeyStore(String keyStoreFile, String keyStoreType, char[] password) throws IOException, GeneralSecurityException {
+        File serverKeyStore = null;
+        if (keyStoreFile != null) {
+            serverKeyStore = Paths.get(keyStoreFile).toFile();
+            if (!serverKeyStore.exists()) {
+                throw new FileNotFoundException("Invalid parameter - specified file " + keyStoreFile + " does not exist");
+            }
+        }
+
+        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+        keyStore.load(new FileInputStream(serverKeyStore), password);
+        return keyStore;
     }
 
     public String getHost() {
@@ -136,16 +143,12 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
         this.transportEndpoint = transportEndpoint;
     }
 
-    public Boolean getEncrypted() {
-        return isEncrypted;
-    }
-
-    public X509Certificate getServerCertificate() {
-        return serverCertificate;
-    }
-
     public CertificateKeyPair getCertificateKeyPair() {
         return certificateKeyPair;
+    }
+
+    public CertificateVerifier getTrustManager() {
+        return trustManager;
     }
 
     @Override
@@ -160,7 +163,7 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
         endpoint = "opc." + code + "://" + host + portAddition + transportEndpoint;
 
 
-        if (configuration.getSecurityPolicy() != null && configuration.getSecurityPolicy() != SecurityPolicy.NONE) {
+        if (SecurityPolicy.NONE != configuration.getSecurityPolicy()) {
             try {
                 openKeyStore(configuration);
             } catch (IOException | GeneralSecurityException e) {
@@ -186,7 +189,4 @@ public class OpcuaDriverContext implements DriverContext, HasConfiguration<Opcua
             .flatMap(CertificateKeyPair::getApplicationUri);
     }
 
-    public PascalByteString getThumbprint() {
-        return thumbprint;
-    }
 }

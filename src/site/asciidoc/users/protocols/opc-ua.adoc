@@ -58,29 +58,31 @@
 
 
 3+|Options
+| `username`              | | A username to authenticate to the OPCUA server with.
+| `password`              | | A password to authenticate to the OPCUA server with.
 
-|| `discovery`  |   Controls the feature of the discovery endpoint of an OPC UA server which every server
+| `discovery`             | `true` | Controls the feature of the discovery endpoint of an OPC UA server which every server
 will propagate over an '<address>/discovery' endpoint. The most common issue here is that most servers are not correctly
 configured and propagate the wrong external IP or URL address. If that is the case you can disable the discovery by
 configuring it with a `false` value.
 
 The discovery phase is always conducted using `NONE` security policy.
 
-| `securityPolicy`  | `NONE` | The security policy applied to communication channel between driver and OPC UA server.
+| `securityPolicy`        | `NONE` | The security policy applied to communication channel between driver and OPC UA server.
 Default value assumes. Possible options are `NONE`, `Basic128Rsa15`, `Basic256`, `Basic256Sha256`, `Aes128_Sha256_RsaOaep`, `Aes256_Sha256_RsaPss`.
-| `messageSecurity` | `SIGN_ENCRYPT` | The security policy applied to messages exchanged after handshake phase.
+| `messageSecurity`       | `SIGN_ENCRYPT` | The security policy applied to messages exchanged after handshake phase.
 Each handshake uses `SIGN_ENCRYPT` mode to securely negotiate encryption keys used later for symmetric encryption.
 In case when security policy defines secure value (i.e. `Basic256`) it will automatically impose full security on the message exchanges.
 
-| `certDirectory`    | | Filesystem location where security related files are expected to be found.
-| `keyStoreFile`     | | The Keystore file used to lookup client certificate and its private key.
-Please note that in case if no value is provided driver will generate self-signed certificate for negotiation phase.
-The keystore file is looked up under `$certDirectory/security/` directory.
-Expected keystore type is PKCS12 (default since Java 11).
-| `keyStorePassword` | | Java keystore password used to access keystore and private key.
-
-| `username`         | | A username to authenticate to the OPCUA server with.
-| `password`         | | A password to authenticate to the OPCUA server with.
+| `serverCertificateFile` | | Filesystem location where server certificate is located, supported formats are `DER` and `PEM`.
+| `keyStoreFile`          | | The Keystore file used to lookup client certificate and its private key.
+| `keyStoreType`          | `pkcs12` | Keystore type used to access keystore and private key, defaults to PKCS (for Java 11+).
+Possible values are between others `jks`, `pkcs11`, `dks`, `jceks`.
+| `keyStorePassword`      | | Java keystore password used to access keystore and private key.
+| `trustStoreFile`        | | The trust store file used to verify server certificates and its chain.
+| `trustStoreType`        | `pkcs12` | Keystore type used to access keystore and private key, defaults to PKCS (for Java 11+).
+Possible values are between others `jks`, `pkcs11`, `dks`, `jceks`.
+| `trustStorePassword`    | | Password used to open trust store.
 
 3+| TCP encoding options
 | `encoding.receiveBufferSize` |   65535 | Maximum size of received TCP transport message chunk value in bytes.
@@ -89,10 +91,10 @@ Expected keystore type is PKCS12 (default since Java 11).
 | `encoding.maxChunkCount`     |      64 | Maximum number of chunks for both sent and received messages.
 
 3+| Timeout options
-| `channelLifetime`     | `3600000` | Time for which negotiated secure channel, its keys and session remains open. Value in milliseconds, by default 60 minutes.
-| `sessionTimeout`      |  `120000` | Expiry time for opened secure session, value in milliseconds. Defaults to 2 minutes.
-| `negotiationTimeout`  |   `60000` | Timeout for all negotiation steps prior acceptance of application level operations - this timeout applies to open secure channel, create session and close calls. Defaults to 60 seconds.
-| `requestTimeout`      |   `30000` | Timeout for read/write/subscribe calls. Value in milliseconds.
+| `channelLifetime`            | `3600000` | Time for which negotiated secure channel, its keys and session remains open. Value in milliseconds, by default 60 minutes.
+| `sessionTimeout`             |  `120000` | Expiry time for opened secure session, value in milliseconds. Defaults to 2 minutes.
+| `negotiationTimeout`         |   `60000` | Timeout for all negotiation steps prior acceptance of application level operations - this timeout applies to open secure channel, create session and close calls. Defaults to 60 seconds.
+| `requestTimeout`             |   `30000` | Timeout for read/write/subscribe calls. Value in milliseconds.
 
 |===
 
@@ -130,6 +132,14 @@ Additionally, to security policy it is possible to specify `messageSecurity` opt
 By default, this option is set to `SIGN_ENCRYPT` which imposes high security settings and full encryption of exchanged message payloads.
 In case when additional diagnostics is needed payloads has to be traced through TRACE level log entries.
 The `SIGN` mode gives possibility o browse packets in tools such wireshark.
+
+==== Certificate verification
+The OPC UA specification defines its own procedures for certificate validation.
+The driver rely on existing infrastructure for TLS certificate validation hence it does not implement all specification recommendations.
+In case when secure communication is enabled without discovery the `trustStoreFile` option or `serverCertificateFile` must be set.
+
+Internally the `discover` option allows driver to fetch certificate from server, without defining it as connection parameters.
+When discovery is disabled, and secure communication is enabled then certificate must be provisioned through connection options.
 
 ==== Negotiation procedure
 Depending on settings driver might or might not attempt to discover endpoints from remote server.

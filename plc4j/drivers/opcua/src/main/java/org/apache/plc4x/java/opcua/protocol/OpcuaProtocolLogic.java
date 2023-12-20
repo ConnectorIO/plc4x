@@ -18,9 +18,10 @@
  */
 package org.apache.plc4x.java.opcua.protocol;
 
-import static org.apache.plc4x.java.opcua.context.SecureChannel.getX509Certificate;
+import static org.apache.plc4x.java.opcua.context.SecureChannel.getX509Certificates;
 
 import java.nio.ByteBuffer;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.plc4x.java.api.authentication.PlcAuthentication;
 import org.apache.plc4x.java.api.exceptions.PlcConnectionException;
@@ -143,8 +144,8 @@ public class OpcuaProtocolLogic extends Plc4xProtocolBase<OpcuaAPU> implements H
 
     @Override
     public void onDiscover(ConversationContext<OpcuaAPU> context) {
-        if (!driverContext.getEncrypted()) {
-            LOGGER.debug("not encrypted, ignoring onDiscover");
+        if (!configuration.isDiscovery()) {
+            LOGGER.debug("Discovery is not enabled, skipping discovery phase");
             context.fireDiscovered(configuration);
             return;
         }
@@ -166,13 +167,14 @@ public class OpcuaProtocolLogic extends Plc4xProtocolBase<OpcuaAPU> implements H
             channel.onDiscover().whenComplete((response, error) -> bridge(transaction, future, response, error))
         );
         future.whenComplete((response, error) -> {
-          if (error != null) {
-              context.getChannel().pipeline().fireExceptionCaught(new PlcConnectionException(error));
-              return;
-          }
-          configuration.setServerCertificate(getX509Certificate(response.getServerCertificate().getStringValue()));
-          context.fireDiscovered(configuration);
-          context.fireDisconnected();
+            if (error != null) {
+                context.getChannel().pipeline().fireExceptionCaught(new PlcConnectionException(error));
+                return;
+            }
+            X509Certificate[] x509Certificates = getX509Certificates(response.getServerCertificate().getStringValue());
+            configuration.setServerCertificate(Objects.requireNonNull(x509Certificates)[0]);
+            context.fireDiscovered(configuration);
+            context.fireDisconnected();
         });
     }
 
