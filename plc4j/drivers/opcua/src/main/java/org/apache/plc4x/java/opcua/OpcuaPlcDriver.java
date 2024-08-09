@@ -19,6 +19,8 @@
 package org.apache.plc4x.java.opcua;
 
 import io.netty.buffer.ByteBuf;
+import org.apache.plc4x.java.api.messages.PlcDiscoveryRequest;
+import org.apache.plc4x.java.opcua.discovery.OpcuaDiscoverer;
 import org.apache.plc4x.java.spi.configuration.PlcConnectionConfiguration;
 import org.apache.plc4x.java.opcua.config.OpcuaConfiguration;
 import org.apache.plc4x.java.opcua.context.OpcuaDriverContext;
@@ -30,6 +32,7 @@ import org.apache.plc4x.java.opcua.tag.OpcuaTag;
 import org.apache.plc4x.java.spi.connection.GeneratedDriverBase;
 import org.apache.plc4x.java.spi.connection.ProtocolStackConfigurer;
 import org.apache.plc4x.java.spi.connection.SingleProtocolStackConfigurer;
+import org.apache.plc4x.java.spi.messages.DefaultPlcDiscoveryRequest;
 import org.apache.plc4x.java.spi.values.PlcValueHandler;
 
 import java.util.Collections;
@@ -62,6 +65,11 @@ public class OpcuaPlcDriver extends GeneratedDriverBase<OpcuaAPU> {
     @Override
     protected List<String> getSupportedTransportCodes() {
         return Collections.singletonList("tcp");
+    }
+
+    @Override
+    public PlcDiscoveryRequest.Builder discoveryRequestBuilder() {
+        return new DefaultPlcDiscoveryRequest.Builder(new OpcuaDiscoverer());
     }
 
     @Override
